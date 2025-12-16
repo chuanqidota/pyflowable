@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Flowable REST API 服务
+  flowable-rest:
+    image: docker.1ms.run/flowable/flowable-rest:6.8.0
+    container_name: flowable-rest
+    environment:
+      # === 基础服务器配置 ===
+      SERVER_PORT: 8080                     # 容器内应用运行的端口
+      SERVER_SERVLET_CONTEXT_PATH: /flowable-rest # 应用的上下文路径，访问API的基础路径
+
+      # === 外部PostgreSQL数据库配置 ===
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_DATABASE}?currentSchema=public
+      # 连接字符串。${}变量从.env文件读取。`currentSchema=public`指定默认schema。
+      SPRING_DATASOURCE_USERNAME: ${PG_USER} # 数据库用户名
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD} # 数据库密码
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      # **关键**：明确指定PostgreSQL JDBC驱动类，避免Spring Boot自动选择错误的驱动（如H2）。
+
+      # === JPA & Hibernate 配置 ===
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # 启动时自动更新数据库Schema（生产环境建议使用`validate`）
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      # 指定Hibernate的方言为PostgreSQL
+
+      # === Flowable 引擎核心配置 ===
+      FLOWABLE_DATABASE_TYPE: postgres
+      # **关键**：明确告知Flowable引擎使用PostgreSQL数据库，这是解决“H2驱动”错误的关键。
+      FLOWABLE_DATABASE_SCHEMA_UPDATE: true # 允许Flowable自动更新其引擎表结构
+
+      # === Flowable 应用（IDM）配置 ===
+      FLOWABLE_COMMON_APP_IDM_ADMIN_USER: admin     # 内置管理员用户名
+      FLOWABLE_COMMON_APP_IDM_ADMIN_PASSWORD: admin # 内置管理员密码
+
+    ports:
+      - "8081:8080" # 端口映射：将宿主机的8081端口映射到容器的8080端口。
+    restart: unless-stopped # 容器退出时自动重启，除非手动停止
+
+  # Flowable UI 用户界面服务
+  flowable-ui:
+    image: docker.1ms.run/flowable/flowable-ui:6.8.0
+    container_name: flowable-ui
+    environment:
+      # === 基础服务器配置 ===
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /flowable-ui
+
+      # === 外部PostgreSQL数据库配置（必须与REST服务相同）===
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${PG_HOST}:${PG_PORT}/${PG_DATABASE}?currentSchema=public
+      SPRING_DATASOURCE_USERNAME: ${PG_USER}
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+
+      # === Flowable UI 特定配置 ===
+      # **关于端口的重点说明**：
+      # 此URL用于UI容器内部调用REST API。
+      # `flowable-rest` 是Docker Compose网络中的服务名，解析为REST容器的IP。
+      # `8080` 是 `flowable-rest` 容器内部的应用端口（由它的 SERVER_PORT: 8080 定义）。
+      # 这个连接发生在Docker内部网络，与宿主机映射的端口(8081)无关。
+      # 因此，配置 `http://flowable-rest:8080/flowable-rest` 是完全正确的。
+      FLOWABLE_UI_APP_REST_URL: http://flowable-rest:8080/flowable-rest
+
+      # === Flowable 应用（IDM）配置（与REST服务一致）===
+      FLOWABLE_COMMON_APP_IDM_ADMIN_USER: admin
+      FLOWABLE_COMMON_APP_IDM_ADMIN_PASSWORD: admin
+
+    ports:
+      - "8082:8080" # 端口映射：将宿主机的8082端口映射到容器的8080端口。
+    depends_on:
+      - flowable-rest # 明确声明依赖，确保flowable-rest先启动
+    restart: unless-stopped
