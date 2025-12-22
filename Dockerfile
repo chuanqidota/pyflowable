@@ -1,4 +1,4 @@
-FROM python:3.12.1
+FROM docker.1ms.run/library/python:3.13-alpine3.23
 RUN mkdir -p /opt/
 WORKDIR /opt/
 COPY . .
