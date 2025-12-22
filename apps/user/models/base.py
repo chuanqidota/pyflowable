@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+
 class BaseModel(models.Model):
     create_time = models.DateTimeField(auto_now_add=True, help_text=_('创建时间'), db_comment=_('创建时间'))
     update_time = models.DateTimeField(auto_now=True, help_text=_('更新时间'), db_comment=_('更新时间'))

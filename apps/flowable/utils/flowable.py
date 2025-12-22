@@ -1,7 +1,8 @@
 import requests
 
+
 class FlowableHandler:
-    def __init__(self,endpoint,username,password):
+    def __init__(self, endpoint, username, password):
         self.endpoint = endpoint
         self.username = username
         self.password = password
@@ -11,25 +12,25 @@ class FlowableHandler:
         self.session.headers.update({'Content-Type': 'application/json'})
         self.url_prefix = f"{self.endpoint}/flowable-rest/service"
         self.url_config = {
-            "get_groups": f"{self.url_prefix}/identity/groups", # 查询用户组列表
-            "create_group": f"{self.url_prefix}/identity/groups", # 创建用户组
-            "delete_group": f"{self.url_prefix}/identity/groups/{{group_id}}", # 删除用户组
+            "get_groups": f"{self.url_prefix}/identity/groups",  # 查询用户组列表
+            "create_group": f"{self.url_prefix}/identity/groups",  # 创建用户组
+            "delete_group": f"{self.url_prefix}/identity/groups/{{group_id}}",  # 删除用户组
 
-            "start_process": f"{self.url_prefix}/runtime/process-instances", # 启动流程
-            "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}", # 获取流程实例信息
-            "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances", # 历史流程实例查询
-            "delete_process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}", # 删除流程实例
-            "diagram": f"{self.url_prefix}/repository/process-instances/{{process_instance_id}}/diagram", # 获取流程图
+            "start_process": f"{self.url_prefix}/runtime/process-instances",  # 启动流程
+            "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
+            "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
+            "delete_process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 删除流程实例
+            "diagram": f"{self.url_prefix}/repository/process-instances/{{process_instance_id}}/diagram",  # 获取流程图
 
-            "historic_tasks": f"{self.url_prefix}/history/historic-task-instances", # 历史任务查询
-            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks", # 任务候选人/组
-            "tasks": f"{self.url_prefix}/runtime/tasks", # 获取任务列表
-            "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}", # 完成任务
-            "claim_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}", # 认领
-            "assign_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}" # 指派
-            
+            "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
+            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
+            "tasks": f"{self.url_prefix}/runtime/tasks",  # 获取任务列表
+            "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成任务
+            "claim_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领
+            "assign_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}"  # 指派
+
         }
-    
+
     def get_groups(self):
         """
         获取用户组列表
@@ -38,8 +39,8 @@ class FlowableHandler:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
-    
-    def create_group(self,group_id,name,type=None):
+
+    def create_group(self, group_id, name, type=None):
         """
         创建用户组
         
@@ -58,8 +59,8 @@ class FlowableHandler:
         response = self.session.post(url, json=payload)
         response.raise_for_status()
         return response.json()
-    
-    def delete_group(self,group_id):
+
+    def delete_group(self, group_id):
         """
         删除用户组
         
@@ -70,8 +71,8 @@ class FlowableHandler:
         response = self.session.delete(url)
         response.raise_for_status()
         return response.status_code == 204
-    
-    def start_process(self,process_definition_key,business_key=None,variables=None):
+
+    def start_process(self, process_definition_key, business_key=None, variables=None):
         """
         启动流程
         
@@ -79,7 +80,7 @@ class FlowableHandler:
         :param process_definition_key: 说明 模型key
         :param business_key: 说明 业务key
         :param variables: 说明 流程变量
-        """ 
+        """
         url = self.url_config["start_process"]
         payload = {
             "processDefinitionKey": process_definition_key,
@@ -92,7 +93,7 @@ class FlowableHandler:
         response.raise_for_status()
         return response.json()
 
-    def get_process_instance(self,process_instance_id):
+    def get_process_instance(self, process_instance_id):
         """
         流程实例信息
 
@@ -104,7 +105,7 @@ class FlowableHandler:
         response.raise_for_status()
         return response.json()
 
-    def delete_process_instance(self,process_instance_id,reason=None):
+    def delete_process_instance(self, process_instance_id, reason=None):
         """
         删除流程实例
 
@@ -120,7 +121,7 @@ class FlowableHandler:
         response.raise_for_status()
         return response.status_code == 204
 
-    def get_historic_process_instances(self,business_key=None):
+    def get_historic_process_instances(self, business_key=None):
         """
         获取历史流程实例
         
@@ -133,21 +134,22 @@ class FlowableHandler:
             params["businessKey"] = business_key
         response = self.session.get(url, params=params)
         response.raise_for_status()
-        return response.json()  
+        return response.json()
 
-    def get_process_diagram(self,process_instance_id):
+    def get_process_diagram(self, process_instance_id):
         """
         获取流程图
         
         :param self: 说明
         :param process_instance_id: 说明 流程实例ID
-        """ 
+        """
         url = self.url_config["diagram"].format(process_instance_id=process_instance_id)
         response = self.session.get(url)
         response.raise_for_status()
         return response.content
 
-    def get_tasks(self,assignee=None,candidate_user=None,candidate_group=None,process_instance_id=None,active=True):
+    def get_tasks(self, assignee=None, candidate_user=None, candidate_group=None, process_instance_id=None,
+                  active=True):
         """
         获取任务列表
         
@@ -216,7 +218,7 @@ class FlowableHandler:
         response.raise_for_status()
         return response.json()
 
-    def complete_task(self,task_id,variables=None):
+    def complete_task(self, task_id, variables=None):
         """
         完成任务
         
@@ -231,8 +233,8 @@ class FlowableHandler:
         response = self.session.post(f"{url}/complete", json=payload)
         response.raise_for_status()
         return response.json()
-    
-    def claim_task(self,task_id,user_id):
+
+    def claim_task(self, task_id, user_id):
         """
         认领任务
         
@@ -248,8 +250,8 @@ class FlowableHandler:
         response = self.session.post(url, json=payload)
         response.raise_for_status()
         return response.json()
-    
-    def assign_task(self,task_id,user_id):
+
+    def assign_task(self, task_id, user_id):
         """
         指派任务
 
@@ -264,8 +266,8 @@ class FlowableHandler:
         response = self.session.put(url, json=payload)
         response.raise_for_status()
         return response.json()
-    
-    def get_task_identity_links(self,task_id):
+
+    def get_task_identity_links(self, task_id):
         """
         获取任务候选人/组
         
@@ -276,8 +278,8 @@ class FlowableHandler:
         response = self.session.get(url)
         response.raise_for_status()
         return response.json()
-    
-    def get_historic_tasks(self,process_instance_id=None,assignee=None):
+
+    def get_historic_tasks(self, process_instance_id=None, assignee=None):
         """
         获取历史任务
 
