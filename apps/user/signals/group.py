@@ -3,7 +3,7 @@ from django.db.models.signals import post_delete
 
 from django.dispatch import receiver
 
-from apps.user.models.user import Group
+from user.models import Group
 
 
 @receiver(post_save, sender=Group)

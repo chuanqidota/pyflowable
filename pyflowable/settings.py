@@ -13,15 +13,21 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 import sys
 
+from utils.yaml import load_yaml_config
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
+
+# 加载配置
+CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'config.yaml')
+config = load_yaml_config(CONFIG_PATH)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '$5d4sqo=_d!bk299tnfdvsly=ylr$!ejk=weo*b)9b=03g9_2i'
+SECRET_KEY = 'uK9xIng9Wlw6-LuTVdQ7DifUQnVRP1xyRTulCJHiECs='
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,7 +47,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'user.apps.UserConfig'
-
 ]
 
 MIDDLEWARE = [
@@ -54,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'pyflowable.urls'
+ROOT_URLCONF = 'pyflowable.url'
 
 TEMPLATES = [
     {
@@ -119,6 +124,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Django REST Framework settings
 REST_FRAMEWORK = {
@@ -147,3 +153,10 @@ REST_FRAMEWORK = {
     ],
 
 }
+
+# 用户-认证
+AUTH_USER_MODEL = 'user.User'
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "user.auth.backends.EmailAuthBackend"
+]
