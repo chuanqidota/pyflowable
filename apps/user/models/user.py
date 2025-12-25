@@ -42,3 +42,11 @@ class User(BaseModel):
     @property
     def is_authenticated(self):
         return True
+
+    @property
+    def group_name(self):
+        """
+            组名称
+        :return:
+        """
+        return f"{self.group.name}-{self.group.alias}" if self.group else ""

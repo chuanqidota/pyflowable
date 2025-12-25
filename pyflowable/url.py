@@ -14,11 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path(r'^admin/', admin.site.urls),
+    re_path(r'^admin/', admin.site.urls),
     path("", include("rest_framework.urls")),  # 登录按钮
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # {"username":"","password":""}
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # {"refresh":"上面接口返回的refresh字段"}

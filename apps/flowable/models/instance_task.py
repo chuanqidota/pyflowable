@@ -26,3 +26,19 @@ class InstanceTask(BaseModel):
     class Meta:
         verbose_name = "实例任务"
         app_label = "flowable"
+
+    @property
+    def group_display(self):
+        """
+            组名称
+        :return:
+        """
+        return self.group.name if self.group else ""
+
+    @property
+    def group_user_list(self):
+        """
+            组用户
+        :return:
+        """
+        return self.group.group_user.all() if self.group else []

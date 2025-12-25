@@ -27,10 +27,10 @@ config = load_yaml_config(CONFIG_PATH)
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'uK9xIng9Wlw6-LuTVdQ7DifUQnVRP1xyRTulCJHiECs='
+SECRET_KEY = config["secret_key"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config["debug"]
 
 ALLOWED_HOSTS = []
 
@@ -82,10 +82,20 @@ WSGI_APPLICATION = 'pyflowable.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config["database"]["name"],
+        'HOST': config["database"]["host"],
+        'PORT': config["database"]["port"],
+        'USER': config["database"]["user"],
+        'PASSWORD': config["database"]["password"],
+        'ATOMIC_REQUESTS': False,
+        'OPTIONS': {
+            'init_command': 'SET sql_mode=STRICT_TRANS_TABLES',
+            'charset': 'utf8mb4'
+        }
     }
 }
 
@@ -144,7 +154,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
-
     # 过滤器
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -160,3 +169,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "user.auth.backends.EmailAuthBackend"
 ]
+
+# 默认为 True，设为 False 可以关闭自动添加斜杠
+APPEND_SLASH = False

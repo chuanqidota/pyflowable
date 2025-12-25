@@ -1,0 +1,8 @@
+secret_key: uK9xIng9Wlw6-LuTVdQ7DifUQnVRP1xyRTulCJHiECs=
+debug: true
+database:
+  name: pyflowable
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: jinang123

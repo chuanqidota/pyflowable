@@ -11,3 +11,7 @@ class Group(BaseModel):
     class Meta:
         verbose_name = '用户组'
         app_label = 'user'
+
+    @property
+    def user_list(self):
+        return self.group_user.defer("_password")
