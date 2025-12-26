@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'user.apps.UserConfig'
@@ -173,6 +174,11 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "user.auth.backends.EmailAuthBackend"
 ]
+
+# 登录相关设置
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/api/'  # 登录后重定向的URL
+LOGOUT_REDIRECT_URL = '/'  # 登出后重定向的URL
 
 # 默认为 True，设为 False 可以关闭自动添加斜杠
 APPEND_SLASH = False

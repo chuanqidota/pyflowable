@@ -15,13 +15,29 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.views.generic import RedirectView
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from apps.user.urls import router as user_router
+from apps.flowable.urls import router as flowable_router
+
+# 统一管理路径
+main_router = DefaultRouter()
+for prefix, viewset, basename in user_router.registry:
+    main_router.register(f'user/{prefix}', viewset, basename=basename)
+for prefix, viewset, basename in flowable_router.registry:
+    main_router.register(f'flowable/{prefix}', viewset, basename=basename)
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
-    path("", include("rest_framework.urls")),  # 登录按钮
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # {"username":"","password":""}
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # {"refresh":"上面接口返回的refresh字段"}
-    path('api/user/', include('user.urls'), name='user-api'),
-    path('api/user/', include('flowable.urls'), name='flowable-api')
+    # 根路径重定向
+    path('', RedirectView.as_view(url='/login/', permanent=False), name='root-redirect'),
+    # 登录按钮
+    path("", include("rest_framework.urls")),
+    # JWT Token
+    path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # {"username":"","password":""}
+    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),  # {"refresh":"上面接口返回的refresh字段"}
+    # API
+    path('api/', include(main_router.urls)),  # 所有API都在api下
 ]
