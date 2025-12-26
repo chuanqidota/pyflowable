@@ -26,6 +26,9 @@ class ProcessHasInstanceSerializers(serializers.ModelSerializer):
 
 
 class ProcessHasAttrSerializers(serializers.ModelSerializer):
+    """
+        带有属性列表的序列化
+    """
     attr_list = serializers.ReadOnlyField(help_text="属性列表")
 
     class Meta:

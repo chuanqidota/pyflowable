@@ -4,6 +4,9 @@ from flowable.models.process_attr import ProcessAttr
 
 
 class ProcessAttrSerializers(serializers.ModelSerializer):
+    """
+        基础序列化
+    """
     type_display = serializers.SerializerMethodField(help_text="类型中文")
 
     class Meta:
