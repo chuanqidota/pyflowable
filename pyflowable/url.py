@@ -32,12 +32,14 @@ for prefix, viewset, basename in flowable_router.registry:
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
     # 根路径重定向
-    path('', RedirectView.as_view(url='/login/', permanent=False), name='root-redirect'),
+    path("", RedirectView.as_view(url='/login/', permanent=False), name='root-redirect'),
     # 登录按钮
     path("", include("rest_framework.urls")),
+    # API
+    path('api/', include(main_router.urls)),  # 所有API都在api下
+
     # JWT Token
     path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # {"username":"","password":""}
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),  # {"refresh":"上面接口返回的refresh字段"}
-    # API
-    path('api/', include(main_router.urls)),  # 所有API都在api下
+
 ]
