@@ -41,4 +41,4 @@ class InstanceTask(BaseModel):
             组用户
         :return:
         """
-        return self.group.group_user.all() if self.group else []
+        return self.group.group_user.all().values() if self.group else []

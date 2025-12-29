@@ -11,7 +11,9 @@ class InstanceSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Instance
-        fields = [f.name for f in Instance._meta.get_fields()] + ["status_display"]
+        fields = [f.name for f in Instance._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["status_display"]
 
     @staticmethod
     def get_status_display(obj):
@@ -32,7 +34,8 @@ class InstanceHasAttrValueSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Instance
-        fields = [f.name for f in Instance._meta.get_fields()] + \
+        fields = [f.name for f in Instance._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
                  ["status_display", "instance_attr_value_dict"]
 
     @staticmethod
@@ -53,4 +56,6 @@ class InstanceHasTaskSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Instance
-        fileds = [f.name for f in Instance._meta.get_fields()] + ["task_list"]
+        fileds = [f.name for f in Instance._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["task_list"]

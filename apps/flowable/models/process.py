@@ -24,7 +24,7 @@ class Process(BaseModel):
             流程顾问展示
         :return:
         """
-        return f"{self.mentor.name}-{self.mentor.username}"
+        return f"{self.mentor.name}-{self.mentor.username}" if self.mentor else ""
 
     @property
     def instance_list(self):
@@ -32,8 +32,8 @@ class Process(BaseModel):
             流程实例列表
         :return:
         """
-        return self.process_instance.all()
+        return self.process_instance.all().values()
 
     @property
     def attr_list(self):
-        return self.process_attr.all()
+        return self.process_attr.all().values()

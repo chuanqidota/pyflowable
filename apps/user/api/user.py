@@ -1,9 +1,8 @@
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
 from user.mixins.login import LoginRequiredMixin
 from user.models import User, Group
-from user.serializers.group import GroupSerializer
+from user.serializers.group import GroupSerializer, GroupHasUserSerializer
 from user.serializers.user import UserSerializer
 
 
@@ -17,6 +16,12 @@ class GroupViewSet(LoginRequiredMixin, ModelViewSet):
     filterset_fields = ["name", "alias"]
     ordering_fields = ["id", "created_at"]
     ordering = ["-id"]
+
+    def get_serializer_class(self):
+        serializer = self.request.query_params.get("serializer")
+        if serializer == "user_list":
+            return GroupHasUserSerializer
+        return super().get_serializer_class()
 
 
 class UserViewSet(LoginRequiredMixin, ModelViewSet):

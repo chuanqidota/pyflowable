@@ -47,4 +47,4 @@ class Instance(BaseModel):
             任务列表
         :return:
         """
-        return self.instance_task.all()
+        return self.instance_task.all().values()

@@ -18,4 +18,4 @@ class ProcessGroup(BaseModel):
             流程列表
         :return:
         """
-        return self.group_process.all()
+        return self.group_process.all().values()

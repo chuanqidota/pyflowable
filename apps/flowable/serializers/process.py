@@ -11,7 +11,9 @@ class ProcessSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Process
-        fields = [f.name for f in Process._meta.get_fields()] + ["mentor_display"]
+        fields = [f.name for f in Process._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["mentor_display"]
 
 
 class ProcessHasInstanceSerializers(serializers.ModelSerializer):
@@ -22,7 +24,9 @@ class ProcessHasInstanceSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Process
-        fields = [f.name for f in Process._meta.get_fields()] + ["instance_list"]
+        fields = [f.name for f in Process._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["instance_list"]
 
 
 class ProcessHasAttrSerializers(serializers.ModelSerializer):
@@ -33,4 +37,6 @@ class ProcessHasAttrSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Process
-        fields = [f.name for f in Process._meta.get_fields()] + ["attr_list"]
+        fields = [f.name for f in Process._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["attr_list"]

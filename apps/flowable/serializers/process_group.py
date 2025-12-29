@@ -11,4 +11,6 @@ class ProcessGroupSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessGroup
-        fields = [f.name for f in ProcessGroup._meta.get_fields()] + ["process_list"]
+        fields = [f.name for f in ProcessGroup._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["process_list"]

@@ -14,4 +14,4 @@ class Group(BaseModel):
 
     @property
     def user_list(self):
-        return self.group_user.defer("_password")
+        return self.group_user.filter(is_active=True).values(*["username", "name", "email"])

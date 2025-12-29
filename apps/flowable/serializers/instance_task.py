@@ -12,7 +12,9 @@ class InstanceTaskSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = InstanceTask
-        fields = [f.name for f in InstanceTask._meta.get_fields()] + ["status_display", "group_display"]
+        fields = [f.name for f in InstanceTask._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["status_display", "group_display"]
 
     @staticmethod
     def get_status_display(obj):
@@ -29,7 +31,8 @@ class InstanceTaskHasGroupUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = InstanceTask
-        fields = [f.name for f in InstanceTask._meta.get_fields()] + \
+        fields = [f.name for f in InstanceTask._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
                  ["status_display", "group_user_list", "group_display"]
 
     @staticmethod

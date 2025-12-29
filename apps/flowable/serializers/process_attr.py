@@ -11,7 +11,9 @@ class ProcessAttrSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = ProcessAttr
-        fields = [f.name for f in ProcessAttr._meta.get_fields()] + ["type_display"]
+        fields = [f.name for f in ProcessAttr._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["type_display"]
 
     @staticmethod
     def get_type_display(obj):

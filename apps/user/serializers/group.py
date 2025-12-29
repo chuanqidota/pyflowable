@@ -7,12 +7,13 @@ class GroupSerializer(serializers.ModelSerializer):
     """
         基础序列化
     """
+
     class Meta:
         model = Group
         fields = "__all__"
 
 
-class GroupHasSerializer(serializers.ModelSerializer):
+class GroupHasUserSerializer(serializers.ModelSerializer):
     """
         包含用户的序列化
     """
@@ -20,4 +21,6 @@ class GroupHasSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = [f.name for f in Group._meta.get_fields()] + ["user_list"]
+        fields = [f.name for f in Group._meta.get_fields()
+                  if not (hasattr(f, 'is_relation') and f.is_relation)] + \
+                 ["user_list"]
