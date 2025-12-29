@@ -7,8 +7,8 @@ from user.api.user import UserViewSet, GroupViewSet
 app_name = 'user'
 
 router = DefaultRouter()
-router.register("group", GroupViewSet, basename="group")  # 用户分组
-router.register("user", UserViewSet, basename="user")  # 用户
+router.register("v1/group", GroupViewSet, basename="group")  # 用户分组
+router.register("v1/user", UserViewSet, basename="user")  # 用户
 
 urlpatterns = [
     path('v1/manual-login', ManualLoginView.as_view(), name='manual-login'),  # 手动登陆

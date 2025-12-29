@@ -8,8 +8,8 @@ from user.models import BaseModel, User
 class Process(BaseModel):
     group = models.ForeignKey(ProcessGroup, on_delete=models.PROTECT, related_name="group_process", db_constraint=False,
                               help_text=_("流程分组"), db_comment=_("流程分组"))
-    mentor = models.ForeignKey(User, on_delete=models.SET_NULL, related_name="user_mentor", db_constraint=False,
-                               help_text=_("流程顾问"), db_comment=_("流程顾问"))
+    mentor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="user_mentor",
+                               db_constraint=False, help_text=_("流程顾问"), db_comment=_("流程顾问"))
     name = models.CharField(max_length=50, help_text=_("中文名称"), db_comment=_("中文名称"))
     key = models.CharField(max_length=50, unique=True, help_text=_("模型key"), db_comment=_("模型key"))
     sort = models.IntegerField(help_text=_("排序"), db_comment=_("排序"))

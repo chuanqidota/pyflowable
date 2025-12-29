@@ -15,12 +15,12 @@ class InstanceTask(BaseModel):
 
     instance = models.ForeignKey(Instance, on_delete=models.CASCADE, related_name="instance_task",
                                  db_constraint=False, help_text=_("实例"), db_comment=_("实例"))
-    group = models.ForeignKey(Group, on_delete=models.SET_NULL, related_name="group_task",
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True, related_name="group_task",
                               db_constraint=False, help_text=_("组"), db_comment=_("组"))
     name = models.CharField(max_length=100, help_text=_("中文名称"), db_comment=_("中文名称"))
     key = models.CharField(max_length=100, help_text=_("英文名称"), db_comment=_("英文名称"))
     assignee = models.JSONField(default=list, help_text=_("分配人"), db_comment="分配人")
-    status = models.CharField(choices=STATUS_CHOICE, help_text=_("状态"), db_comment=_("状态"))
+    status = models.CharField(max_length=50, choices=STATUS_CHOICE, help_text=_("状态"), db_comment=_("状态"))
     params = models.JSONField(default=dict, help_text=_("参数"), db_comment=_("参数"))
 
     class Meta:

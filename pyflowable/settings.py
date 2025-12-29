@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
-    'user.apps.UserConfig'
+    'user.apps.UserConfig',
+    'flowable.apps.FlowableConfig'
 ]
 
 MIDDLEWARE = [
@@ -164,7 +165,7 @@ REST_FRAMEWORK = {
     # 默认权限
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
-    ]
+    ],
 
 }
 
@@ -177,7 +178,7 @@ AUTHENTICATION_BACKENDS = [
 
 # 登录相关设置
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/api/'  # 登录后重定向的URL
+LOGIN_REDIRECT_URL = '/api/user/'  # 登录后重定向的URL
 LOGOUT_REDIRECT_URL = '/'  # 登出后重定向的URL
 
 # 默认为 True，设为 False 可以关闭自动添加斜杠

@@ -8,4 +8,5 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = list(set([f.name for f in User._meta.get_fields()]) - {"_password"}) + ["group_name"]
+        fields = list(set([f.name for f in User._meta.get_fields()
+                           if not (hasattr(f, 'is_relation') and f.is_relation)]) - {"_password"}) + ["group_name"]

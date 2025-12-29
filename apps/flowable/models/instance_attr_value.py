@@ -9,7 +9,7 @@ from user.models import BaseModel
 class InstanceAttrValue(BaseModel):
     instance = models.ForeignKey(Instance, on_delete=models.CASCADE, related_name="instance_attr_value",
                                  db_constraint=False, help_text=_("实例"), db_comment=_("实例"))
-    attr = models.ForeignKey(ProcessAttr, on_delete=models.SET_NULL, related_name="attr_value",
+    attr = models.ForeignKey(ProcessAttr, on_delete=models.SET_NULL, null=True, blank=True, related_name="attr_value",
                              db_constraint=False, help_text=_("属性"), db_comment=_("属性"))
     value = models.TextField(help_text=_("属性值"), db_comment=_("属性值"))
 

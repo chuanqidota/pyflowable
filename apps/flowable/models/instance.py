@@ -15,8 +15,8 @@ class Instance(BaseModel):
         ('complete', _('完成')),
     )
 
-    process = models.ForeignKey(Process, on_delete=models.SET_NULL, related_name="process_instance",
-                                db_constraint=False, help_text=_("流程定义"), db_comment=_("流程定义"))
+    process = models.ForeignKey(Process, on_delete=models.SET_NULL, null=True, blank=True, db_constraint=False,
+                                related_name="process_instance", help_text=_("流程定义"), db_comment=_("流程定义"))
     flowable_id = models.CharField(max_length=50, help_text=_("flowable流程示例ID"), db_comment=_("flowable流程示例ID"))
     name = models.CharField(max_length=100, help_text=_("名称"), db_comment=_("名称"))
     number = models.CharField(max_length=100, help_text=_("编号"), db_comment=_("编号"))
