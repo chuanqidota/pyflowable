@@ -130,7 +130,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -167,6 +167,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated'
     ],
 
+    # 日期和时间
+    'DATE_FORMAT': "%Y-%m-%d",
+    'DATE_INPUT_FORMATS': ["%Y-%m-%d"],
+
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
+    'DATETIME_INPUT_FORMATS': ["%Y-%m-%d %H:%M:%S"],
+
+    'TIME_FORMAT': "%Y-%m-%d",
+    'TIME_INPUT_FORMATS': ["%Y-%m-%d"],
 }
 
 # 用户-认证

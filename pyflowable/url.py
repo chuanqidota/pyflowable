@@ -22,7 +22,7 @@ urlpatterns = [
     # django后台管理页面
     re_path(r'^admin/', admin.site.urls),
     # 根路径重定向
-    path("", RedirectView.as_view(url='/api/docs/', permanent=False), name='root-redirect'),
+    path("", RedirectView.as_view(url='/login/', permanent=False), name='root-redirect'),
     # 登录按钮
     path("", include("rest_framework.urls")),
     # JWT Token
