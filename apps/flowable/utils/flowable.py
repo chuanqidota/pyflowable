@@ -28,37 +28,41 @@ class FlowableHandler:
             "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成任务
             "claim_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领
             "assign_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}"  # 指派
-
         }
 
     def get_groups(self):
         """
-        获取用户组列表
+            获取用户组列表
+        :return:
+            [{"id":"OpsManager","name":"运维管理员组"}]
         """
         url = self.url_config["get_groups"]
         response = self.session.get(url)
-        response.raise_for_status()
-        return response.json()
+        print(response.text)
+        res = response.json()
+        return [{"id": i.get("id"), "name": i.get("name")} for i in res.get("data")]
 
-    def create_group(self, group_id, name, type=None):
+    def create_group(self, group_id, name, _type=None):
         """
-        创建用户组
-        
-        :param self: 说明
-        :param group_id: 说明 组ID
-        :param name: 说明 组名称
-        :param type: 说明 组类型
+            创建分组
+        :param group_id:
+        :param name:
+        :param _type:
+        :return:
+            True/False
         """
         url = self.url_config["create_group"]
         payload = {
             "id": group_id,
             "name": name,
         }
-        if type:
-            payload["type"] = type
+        if _type:
+            payload["type"] = _type
         response = self.session.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+        print(response.text)
+        if response.ok:
+            return False
+        return True
 
     def delete_group(self, group_id):
         """
@@ -69,17 +73,20 @@ class FlowableHandler:
         """
         url = self.url_config["delete_group"].format(group_id=group_id)
         response = self.session.delete(url)
-        response.raise_for_status()
-        return response.status_code == 204
+        print(response.text)
+        if response.status_code != 204:
+            return False
+        return True
 
     def start_process(self, process_definition_key, business_key=None, variables=None):
         """
-        启动流程
-        
+            启动流程
         :param self: 说明
         :param process_definition_key: 说明 模型key
         :param business_key: 说明 业务key
         :param variables: 说明 流程变量
+        :return:
+            True/False, 流程示例ID
         """
         url = self.url_config["start_process"]
         payload = {
@@ -90,36 +97,66 @@ class FlowableHandler:
         if variables:
             payload["variables"] = [{"name": k, "value": v} for k, v in variables.items()]
         response = self.session.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+        print(response.text)
+        if not response.ok:
+            return False, None
+        return True, response.json().get("id")
 
     def get_process_instance(self, process_instance_id):
         """
         流程实例信息
-
         :param self: 说明
         :param process_instance_id: 说明 流程实例ID
+        :return:
+            {
+                'id': '7a491c38-e563-11f0-9ec7-0242ac120002',
+                'url': 'http://127.0.0.1:8081/flowable-rest/service/runtime/process-instances/7a491c38-e563-11f0-9ec7-0242ac120002',
+                'name': None,
+                'businessKey': 'pyflowable',
+                'businessStatus': None,
+                'suspended': False,
+                'ended': False,
+                'processDefinitionId': 'appApplyProcess:14:462bb2bf-db2f-11f0-8f57-0242ac150003',
+                'processDefinitionUrl': 'http://127.0.0.1:8081/flowable-rest/service/repository/process-definitions/appApplyProcess:14:462bb2bf-db2f-11f0-8f57-0242ac150003',
+                'processDefinitionName': '应用申请流程',
+                'processDefinitionDescription': None,
+                'activityId': None,
+                'startUserId': 'rest-admin',
+                'startTime': '2025-12-30T09:39:46.462Z',
+                'variables': [],
+                'callbackId': None,
+                'callbackType': None,
+                'referenceId': None,
+                'referenceType': None,
+                'propagatedStageInstanceId': None,
+                'tenantId': '',
+                'completed': False
+            }
         """
         url = self.url_config["process_instance"].format(process_instance_id=process_instance_id)
         response = self.session.get(url)
-        response.raise_for_status()
+        print(response.text)
+        if not response.ok:
+            return None
         return response.json()
 
     def delete_process_instance(self, process_instance_id, reason=None):
         """
-        删除流程实例
-
+            删除流程实例
         :param self: 说明
         :param process_instance_id: 说明 流程实例ID
         :param reason: 说明 删除原因
+        :return: True/False
         """
         url = self.url_config["delete_process_instance"].format(process_instance_id=process_instance_id)
         params = {}
         if reason:
             params["reason"] = reason
         response = self.session.delete(url, params=params)
-        response.raise_for_status()
-        return response.status_code == 204
+        print(response.text)
+        if response.status_code != 204:
+            return False
+        return True
 
     def get_historic_process_instances(self, business_key=None):
         """
@@ -296,3 +333,31 @@ class FlowableHandler:
         response = self.session.get(url, params=params)
         response.raise_for_status()
         return response.json()
+
+
+if __name__ == '__main__':
+    _endpoint = "http://127.0.0.1:8081"
+    _username = "rest-admin"
+    _password = "test"
+    handle = FlowableHandler(_endpoint, _username, _password)
+
+    # groups = handle.get_groups()
+    # print(groups)
+
+    # res = handle.create_group("sorManager", "sor管理")
+    # print(res)
+
+    # res = handle.delete_group("sorManager")
+    # print(res)
+
+    # res = handle.start_process("appApplyProcess", "pyflowable")
+    # print(res)
+
+    res = handle.get_process_instance("7a491c38-e563-11f0-9ec7-0242ac120002")
+    print(res)
+
+    # res = handle.delete_process_instance("7a491c38-e563-11f0-9ec7-0242ac120002")
+    # print(res)
+
+    # res = handle.get_historic_process_instances()
+    # print(res)
