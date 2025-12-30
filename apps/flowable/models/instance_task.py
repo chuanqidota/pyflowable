@@ -7,7 +7,7 @@ from user.models import BaseModel, Group
 
 class InstanceTask(BaseModel):
     STATUS_CHOICE = (
-        ('wait', _('等待')),
+        ('init', _('初始化')),
         ('ing', _('执行中')),
         ('finish', _('完成')),
         ('error', _('错误')),
@@ -15,8 +15,7 @@ class InstanceTask(BaseModel):
 
     instance = models.ForeignKey(Instance, on_delete=models.CASCADE, related_name="instance_task",
                                  db_constraint=False, help_text=_("实例"), db_comment=_("实例"))
-    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True, related_name="group_task",
-                              db_constraint=False, help_text=_("组"), db_comment=_("组"))
+    group = models.ManyToManyField(Group, related_name="group_task", db_constraint=False, help_text=_("组"))
     name = models.CharField(max_length=100, help_text=_("中文名称"), db_comment=_("中文名称"))
     key = models.CharField(max_length=100, help_text=_("英文名称"), db_comment=_("英文名称"))
     assignee = models.JSONField(default=list, help_text=_("分配人"), db_comment="分配人")
@@ -33,7 +32,7 @@ class InstanceTask(BaseModel):
             组名称
         :return:
         """
-        return self.group.name if self.group else ""
+        return ",".join([i.name for i in self.group.all()])
 
     @property
     def group_user_list(self):

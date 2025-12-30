@@ -11,9 +11,7 @@ class User(BaseModel):
     REQUIRED_FIELDS = ['name']
     USERNAME_FIELD = 'username'
 
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="group_user", db_constraint=False,
-                              null=True, blank=True,
-                              help_text='所属组', db_comment=_('所属用户组'))
+    group = models.ManyToManyField(Group, related_name="group_user", db_constraint=False, help_text='所属组')
     username = models.CharField(max_length=150, unique=True, help_text='用户名', db_comment=_('用户名'))
     name = models.CharField(max_length=150, help_text='姓名', db_comment=_('姓名'))
     _password = models.CharField(max_length=100, null=True, blank=True, db_comment=_('密码'))
@@ -57,4 +55,4 @@ class User(BaseModel):
             组名称
         :return:
         """
-        return f"{self.group.name}-{self.group.alias}" if self.group else ""
+        return ",".join([i.name for i in self.group.all()])

@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from flowable.models.process import Process
-from user.models import BaseModel
+from user.models import BaseModel, User
 
 
 class Instance(BaseModel):
@@ -14,9 +14,10 @@ class Instance(BaseModel):
         ('cancel', _('取消')),
         ('complete', _('完成')),
     )
-
     process = models.ForeignKey(Process, on_delete=models.SET_NULL, null=True, blank=True, db_constraint=False,
                                 related_name="process_instance", help_text=_("流程定义"), db_comment=_("流程定义"))
+    applicant = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, db_constraint=False,
+                                  related_name="user_applicant", help_text=_("申请人"), db_comment=_("申请人"))
     flowable_id = models.CharField(max_length=50, help_text=_("flowable流程示例ID"), db_comment=_("flowable流程示例ID"))
     name = models.CharField(max_length=100, help_text=_("名称"), db_comment=_("名称"))
     number = models.CharField(max_length=100, help_text=_("编号"), db_comment=_("编号"))
@@ -48,3 +49,11 @@ class Instance(BaseModel):
         :return:
         """
         return self.instance_task.all().values()
+
+    @property
+    def applicant_display(self):
+        """
+            申请人展示
+        :return:
+        """
+        return f"{self.applicant.name}-{self.applicant.username}" if self.applicant else ""

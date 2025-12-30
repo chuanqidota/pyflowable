@@ -28,6 +28,36 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
         else:
             return super().get_serializer_class()
 
+    def get_queryset(self):
+        status = self.request.query_params.get("status")
+        # 全部流程
+        if status == "all":
+            return super().get_queryset()
+        # 流程池-根据人员分组查询流程
+        elif status == "pool":
+            instance_task_qs = InstanceTask.objects.filter(group__group_user=self.request.user, status="ing")
+            qs = Instance.objects.filter(id__in=[instance_task_q.instance.id for instance_task_q in instance_task_qs],
+                                         status__in=["init", "ing"])
+            return qs
+        # 待办流程
+        elif status == "undo":
+            instance_task_qs = InstanceTask.objects.filter(assignee__contains=[self.request.user.username],
+                                                           status="ing")
+            qs = Instance.objects.filter(id__in=[instance_task_q.instance.id for instance_task_q in instance_task_qs],
+                                         status__in=["init", "ing"])
+            return qs
+        # 我的工单
+        elif status == "applicant":
+            return Instance.objects.filter(applicant=self.request.user)
+        # 我的处理
+        elif status == "handle":
+            instance_task_qs = InstanceTask.objects.filter(assignee__contains=[self.request.user.username])
+            qs = Instance.objects.filter(id__in=[instance_task_q.instance.id for instance_task_q in instance_task_qs],
+                                         status__in=["init", "ing"])
+            return qs
+        else:
+            return Instance.objects.none()
+
 
 class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
     """
