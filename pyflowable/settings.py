@@ -192,3 +192,8 @@ LOGOUT_REDIRECT_URL = '/'  # 登出后重定向的URL
 
 # 默认为 True，设为 False 可以关闭自动添加斜杠
 APPEND_SLASH = False
+
+# flowable配置
+FLOWABLE_HOST = config["flowable"]["host"]
+FLOWABLE_USERNAME = config["flowable"]["username"]
+FLOWABLE_PASSWORD = config["flowable"]["password"]

@@ -6,3 +6,7 @@ database:
   port: 3306
   user: root
   password: jinang123
+flowable:
+  host: http://127.0.0.1:8081
+  username: rest-admin
+  password: test

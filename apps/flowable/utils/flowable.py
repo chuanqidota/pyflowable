@@ -1,4 +1,5 @@
 import requests
+from django.conf import settings
 
 
 class FlowableHandler:
@@ -185,8 +186,8 @@ class FlowableHandler:
         response.raise_for_status()
         return response.content
 
-    def get_tasks(self, assignee=None, candidate_user=None, candidate_group=None, process_instance_id=None,
-                  active=True):
+    def get_tasks(self, process_instance_id=None, assignee=None, candidate_user=None, candidate_group=None):
+
         """
         获取任务列表
         
@@ -195,7 +196,6 @@ class FlowableHandler:
         :param candidate_user: 说明 候选用户
         :param candidate_group: 说明 候选组
         :param process_instance_id: 说明 流程实例ID
-        :param active: 说明 是否仅查询未完成任务
 
         响应示例:
         -----------
@@ -252,24 +252,31 @@ class FlowableHandler:
         if process_instance_id:
             params["processInstanceId"] = process_instance_id
         response = self.session.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
+        if not response.ok:
+            return False, response.text
+        return response.json().get("data")
 
-    def complete_task(self, task_id, variables=None):
+    def complete_task(self, task_id, user_id=None, variables=None):
         """
         完成任务
         
         :param self: 说明
         :param task_id: 说明 任务ID
+        :param user_id: 说明 用户ID
         :param variables: 说明 流程变量
         """
         url = self.url_config["complete_task"].format(task_id=task_id)
-        payload = {}
+        payload = {
+            "action": "complete",
+        }
+        if user_id:
+            payload["assignee"] = user_id
         if variables:
             payload["variables"] = [{"name": k, "value": v} for k, v in variables.items()]
-        response = self.session.post(f"{url}/complete", json=payload)
-        response.raise_for_status()
-        return response.json()
+        response = self.session.post(url, json=payload)
+        if not response.ok:
+            return False, response.text
+        return True, response.text
 
     def claim_task(self, task_id, user_id):
         """
@@ -285,8 +292,9 @@ class FlowableHandler:
             "assignee": user_id
         }
         response = self.session.post(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+        if not response.ok:
+            return False, response.text
+        return True, response.text
 
     def assign_task(self, task_id, user_id):
         """
@@ -301,8 +309,9 @@ class FlowableHandler:
             "assignee": user_id
         }
         response = self.session.put(url, json=payload)
-        response.raise_for_status()
-        return response.json()
+        if not response.ok:
+            return False, response.text
+        return True, response.text
 
     def get_task_identity_links(self, task_id):
         """
@@ -313,8 +322,9 @@ class FlowableHandler:
         """
         url = self.url_config["task_identity_links"].format(task_id=task_id)
         response = self.session.get(url)
-        response.raise_for_status()
-        return response.json()
+        if not response.ok:
+            return False, response.text
+        return True, response.text
 
     def get_historic_tasks(self, process_instance_id=None, assignee=None):
         """
@@ -335,6 +345,8 @@ class FlowableHandler:
         return response.json()
 
 
+flowable_handle = FlowableHandler(settings.FLOWABLE_HOST, settings.FLOWABLE_USERNAME, settings.FLOWABLE_PASSWORD)
+
 if __name__ == '__main__':
     _endpoint = "http://127.0.0.1:8081"
     _username = "rest-admin"
@@ -353,11 +365,26 @@ if __name__ == '__main__':
     # res = handle.start_process("appApplyProcess", "pyflowable")
     # print(res)
 
-    res = handle.get_process_instance("7a491c38-e563-11f0-9ec7-0242ac120002")
-    print(res)
+    # res = handle.get_process_instance("7a491c38-e563-11f0-9ec7-0242ac120002")
+    # print(res)
 
     # res = handle.delete_process_instance("7a491c38-e563-11f0-9ec7-0242ac120002")
     # print(res)
 
     # res = handle.get_historic_process_instances()
+    # print(res)
+
+    # res = handle.get_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
+    # print(res)
+
+    # res = handle.complete_task("9d8c9ec1-e91c-11f0-8571-0242ac130002", variables={"assigneList":["admin"]})
+    # print(res)
+
+    # res = handle.complete_task("26dcc026-e91d-11f0-8571-0242ac130002", variables={"pass":"1"})
+    # print(res)
+
+    # res = handle.delete_process_instance("4280adfa-dbb8-11f0-8f57-0242ac150003")
+    # print(res)
+
+    # res = handle.get_historic_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
     # print(res)
