@@ -13,7 +13,7 @@ from flowable.utils.flowable import flowable_handle
 from user.models import User, Group
 
 
-class FlowableActionHandle:
+class ActionHandle:
 
     def __init__(self):
         self.business_key = settings.FLOWABLE_BUSINESS_KEY
@@ -86,11 +86,10 @@ class FlowableActionHandle:
         task_id = task.get("id")
         kwargs = instance.instance_attr_value_dict
         kwargs.update({
-            "instance": instance,
-            "process": process,
+            "instance_id": instance.id,
+            "process_id": process.id,
             "task_id": task_id
         })
-
         # 反射对应函数
         caller = methodcaller(task_key, **kwargs)
         module = importlib.import_module("apps.flowable.process")
@@ -192,3 +191,40 @@ class FlowableActionHandle:
         InstanceTask.objects.filter(instance=instance, key=task_key).update(**{"assignee": []})
 
         return True, "执行成功"
+
+    @staticmethod
+    def handle(instance_id, username, allow):
+        """
+            审批处理工单
+        :param instance_id:
+        :param username:
+        :param allow:
+        :return:
+        """
+        instance = Instance.objects.filter(id=instance_id).first()
+        if not instance:
+            raise ValueError("没有查询到实例信息")
+        process_key = instance.process.key
+        flowable_id = instance.flowable_id
+        tasks = flowable_handle.get_tasks(flowable_id).get("data")
+        if not tasks:
+            raise ValueError("flowable没有找到任务")
+
+        if username not in [item.get("assignee") for item in tasks]:
+            raise ValueError("人员不在审批节点")
+
+        task_key = tasks[0].get("taskDefinitionKey")
+        task_id = tasks[0].get("id")
+        kwargs = instance.instance_attr_value_dict
+        kwargs.update({
+            "instance_id": instance.id,
+            "process_id": instance.process.id,
+            "task_id": task_id,
+            "username": username,
+            "allow": allow
+        })
+        # 反射对应函数
+        caller = methodcaller(task_key, **kwargs)
+        module = importlib.import_module("apps.flowable.process")
+        model = getattr(module, process_key)
+        caller(model())

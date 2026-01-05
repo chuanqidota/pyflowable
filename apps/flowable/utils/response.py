@@ -7,9 +7,10 @@ class SuccessResp(Response):
         成功响应
     """
 
-    def __init__(self, result):
+    def __init__(self, result=None, msg="执行成功"):
         data = {
             "result": result,
+            "msg": msg,
             "code": "0000"
         }
         _status = status.HTTP_200_OK
@@ -21,9 +22,10 @@ class FailResp(Response):
         失败响应
     """
 
-    def __init__(self, result):
+    def __init__(self, result=None, msg="执行失败"):
         data = {
             "result": result,
+            "msg": msg,
             "code": "0001"
         }
         _status = status.HTTP_200_OK
