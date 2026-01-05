@@ -10,3 +10,4 @@ flowable:
   host: http://127.0.0.1:8081
   username: rest-admin
   password: test
+  business_key: pyflowable

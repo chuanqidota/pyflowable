@@ -21,7 +21,8 @@ class Instance(BaseModel):
     flowable_id = models.CharField(max_length=50, help_text=_("flowable流程示例ID"), db_comment=_("flowable流程示例ID"))
     name = models.CharField(max_length=100, help_text=_("名称"), db_comment=_("名称"))
     number = models.CharField(max_length=100, help_text=_("编号"), db_comment=_("编号"))
-    status = models.CharField(choices=STATUS_CHOICE, max_length=50, help_text=_("状态"), db_comment=_('状态'))
+    status = models.CharField(choices=STATUS_CHOICE, default="init", max_length=50, help_text=_("状态"),
+                              db_comment=_('状态'))
 
     class Meta:
         verbose_name = "流程实例"

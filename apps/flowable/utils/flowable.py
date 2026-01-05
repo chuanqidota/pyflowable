@@ -1,4 +1,5 @@
 import requests
+
 from django.conf import settings
 
 
@@ -18,6 +19,8 @@ class FlowableHandler:
             "delete_group": f"{self.url_prefix}/identity/groups/{{group_id}}",  # 删除用户组
 
             "start_process": f"{self.url_prefix}/runtime/process-instances",  # 启动流程
+            "process_definitions": f"{self.url_prefix}/repository/process-definitions",  # 查询流程版本定义
+            "process_model": f"{self.url_prefix}/repository/process-definitions/{{process_id}}/model",  # 查询流程详情
             "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
             "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
             "delete_process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 删除流程实例
@@ -27,8 +30,7 @@ class FlowableHandler:
             "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
             "tasks": f"{self.url_prefix}/runtime/tasks",  # 获取任务列表
             "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成任务
-            "claim_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领
-            "assign_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}"  # 指派
+            "action_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领
         }
 
     def get_groups(self):
@@ -102,6 +104,37 @@ class FlowableHandler:
         if not response.ok:
             return False, None
         return True, response.json().get("id")
+
+    def get_latest_process_task(self, process_definition_key):
+        """
+            获取最新版本流程中的所有task和分组
+        :param process_definition_key:
+        :return:
+            [{
+                'key': 'submit_task',
+                'group': ['OpsManager'],
+                'name': '提交工单'
+            }, {
+                'key': 'leader_task',
+                'group': ['OpsManager'],
+                'name': '领导审批'
+            }, {
+                'key': 'sor_task',
+                'group': ['OpsManager'],
+                'name': 'sor处理'
+            }]
+        """
+        process_definitions_url = self.url_config["process_definitions"]
+        params = {
+            "key": process_definition_key
+        }
+        process_def_res = self.session.get(process_definitions_url, params=params)
+        process_id = process_def_res.json().get("data")[-1].get("id")
+        process_model_url = self.url_config["process_model"].format(process_id=process_id)
+        process_model_res = self.session.get(process_model_url)
+        tasks = process_model_res.json().get("processes")[0].get("flowElementMap")
+        return [{"key": t, "group": tasks.get(t).get("candidateGroups"), "name": tasks.get(t).get("name")}
+                for t in tasks.keys() if t.endswith("_task")]
 
     def get_process_instance(self, process_instance_id):
         """
@@ -278,42 +311,59 @@ class FlowableHandler:
             return False, response.text
         return True, response.text
 
-    def claim_task(self, task_id, user_id):
+    def claim_task(self, task_id, username):
         """
         认领任务
         
         :param self: 说明
         :param task_id: 说明 任务ID
-        :param user_id: 说明 用户ID
+        :param username: 说明 用户英文名称
         """
-        url = self.url_config["claim_task"].format(task_id=task_id)
+        url = self.url_config["action_task"].format(task_id=task_id)
         payload = {
             "action": "claim",
-            "assignee": user_id
+            "assignee": username
         }
         response = self.session.post(url, json=payload)
         if not response.ok:
             return False, response.text
         return True, response.text
 
-    def assign_task(self, task_id, user_id):
+    def assign_task(self, task_id, username):
         """
         指派任务
 
         :param self: 说明
         :param task_id: 说明 任务ID
-        :param user_id: 说明 用户ID
+        :param username: 说明 用户英文名称
         """
-        url = self.url_config["assign_task"].format(task_id=task_id)
+        url = self.url_config["action_task"].format(task_id=task_id)
         payload = {
-            "assignee": user_id
+            "action": "delegate",
+            "assignee": username
         }
         response = self.session.put(url, json=payload)
         if not response.ok:
             return False, response.text
         return True, response.text
 
-    def get_task_identity_links(self, task_id):
+    def resolve_task(self, task_id):
+        """
+        退回任务
+
+        :param self: 说明
+        :param task_id: 说明 任务ID
+        """
+        url = self.url_config["action_task"].format(task_id=task_id)
+        payload = {
+            "action": "resolve"
+        }
+        response = self.session.put(url, json=payload)
+        if not response.ok:
+            return False, response.text
+        return True, response.text
+
+    def get_task_assignee_group(self, task_id):
         """
         获取任务候选人/组
         
@@ -324,7 +374,7 @@ class FlowableHandler:
         response = self.session.get(url)
         if not response.ok:
             return False, response.text
-        return True, response.text
+        return True, [i.get("group") for i in response.json() if i.get("group")]
 
     def get_historic_tasks(self, process_instance_id=None, assignee=None):
         """
@@ -362,6 +412,9 @@ if __name__ == '__main__':
     # res = handle.delete_group("sorManager")
     # print(res)
 
+    res = handle.get_latest_process_task("appApplyProcess")
+    print(res)
+
     # res = handle.start_process("appApplyProcess", "pyflowable")
     # print(res)
 
@@ -374,10 +427,13 @@ if __name__ == '__main__':
     # res = handle.get_historic_process_instances()
     # print(res)
 
-    # res = handle.get_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
+    # res = handle.get_tasks("b43d214f-e9db-11f0-a8fb-0242ac140002")
     # print(res)
 
-    # res = handle.complete_task("9d8c9ec1-e91c-11f0-8571-0242ac130002", variables={"assigneList":["admin"]})
+    # res = handle.complete_task("b450a957-e9db-11f0-a8fb-0242ac140002", variables={"assigneeList": ["admin"]})
+    # print(res)
+
+    # res = handle.get_task_assignee_group("0f7fdcd5-e9dc-11f0-a8fb-0242ac140002")
     # print(res)
 
     # res = handle.complete_task("26dcc026-e91d-11f0-8571-0242ac130002", variables={"pass":"1"})
@@ -385,6 +441,6 @@ if __name__ == '__main__':
 
     # res = handle.delete_process_instance("4280adfa-dbb8-11f0-8f57-0242ac150003")
     # print(res)
-
+    #
     # res = handle.get_historic_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
     # print(res)

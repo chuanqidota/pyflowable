@@ -197,3 +197,4 @@ APPEND_SLASH = False
 FLOWABLE_HOST = config["flowable"]["host"]
 FLOWABLE_USERNAME = config["flowable"]["username"]
 FLOWABLE_PASSWORD = config["flowable"]["password"]
+FLOWABLE_BUSINESS_KEY = config["flowable"]["business_key"]

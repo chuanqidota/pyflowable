@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from flowable.api.flowable import SubmitView, RepealView, ClaimView, DelegateView, HandleView
+from flowable.api.flowable import SubmitView, RepealView, ClaimView, DelegateView, HandleView, ResolveView
 from flowable.api.instance import InstanceViewSet, InstanceTaskViewSet
 from flowable.api.process import ProcessGroupViewSet, ProcessViewSet, ProcessAttrViewSet
 
@@ -19,6 +19,7 @@ urlpatterns = [
     path("repeal", RepealView.as_view(), name="repeal"),  # 撤销工单
     path("claim", ClaimView.as_view(), name="claim"),  # 认领任务
     path("delegate", DelegateView.as_view(), name="delegate"),  # 指派任务
+    path("resolve", ResolveView.as_view(), name="resolve"),  # 指派任务
     path("handle", HandleView.as_view(), name="handle"),  # 处理/审批工单
 ]
 
