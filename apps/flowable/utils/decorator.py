@@ -15,10 +15,26 @@ def kwargs_required(*required_args):
     def decorate(func):
         @wraps(func)
         def wrapper(request, *args, **kwargs):
+            if request.method == "GET":
+                data_source = request.GET
+            else:  # POST, PUT, PATCH, DELETE 等
+                # 如果是JSON格式
+                if request.content_type == 'application/json':
+                    try:
+                        data_source = json.loads(request.body)
+                    except json.JSONDecodeError:
+                        return FailResp(msg="无效的json格式")
+                else:
+                    # 普通表单格式
+                    data_source = request.POST
+            errors = []
             for arg in required_args:
-                if arg not in json.loads(request.body):
-                    return FailResp(msg=f"参数没有传: {arg}")
-            return func(*args, **kwargs)
+                value = data_source.get(arg)
+                if value is None or (isinstance(value, str) and value.strip() == ''):
+                    errors.append(arg)
+            if errors:
+                return FailResp(msg=f"缺少参数: {errors}")
+            return func(request, *args, **kwargs)
 
         return wrapper
 

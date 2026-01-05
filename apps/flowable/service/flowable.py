@@ -196,9 +196,9 @@ class ActionHandle:
     def handle(instance_id, username, allow):
         """
             审批处理工单
-        :param instance_id:
-        :param username:
-        :param allow:
+        :param instance_id: 流程实例ID
+        :param username: 用户英文名
+        :param allow: allow是flowable网关上的变量
         :return:
         """
         instance = Instance.objects.filter(id=instance_id).first()
@@ -228,3 +228,13 @@ class ActionHandle:
         module = importlib.import_module("apps.flowable.process")
         model = getattr(module, process_key)
         caller(model())
+
+    @staticmethod
+    def get_diagram(instance_id):
+        """
+            获取流程图
+        :param instance_id: 流程实例ID
+        :return:
+        """
+        diagram = flowable_handle.get_diagram(instance_id)
+        return diagram

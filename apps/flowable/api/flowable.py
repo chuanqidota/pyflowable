@@ -90,3 +90,15 @@ class HandleView(LoginRequiredMixin, APIView):
         username = request.user.username
         ActionHandle().handle(instance_id, allow, username)
         return SuccessResp(msg="后台执行中")
+
+
+class DiagramView(LoginRequiredMixin, APIView):
+    """
+        获取流程图
+    """
+
+    @kwargs_required("instance_id")
+    def get(self, request):
+        instance_id = request.query_params.get("instance_id")
+        diagram = ActionHandle().get_diagram(instance_id)
+        return SuccessResp(result={"diagram": diagram})

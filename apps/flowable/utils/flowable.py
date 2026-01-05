@@ -1,5 +1,6 @@
-import requests
+import base64
 
+import requests
 from django.conf import settings
 
 
@@ -24,7 +25,7 @@ class FlowableHandler:
             "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
             "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
             "delete_process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 删除流程实例
-            "diagram": f"{self.url_prefix}/repository/process-instances/{{process_instance_id}}/diagram",  # 获取流程图
+            "diagram": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}/diagram",  # 获取流程图
 
             "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
             "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
@@ -394,6 +395,18 @@ class FlowableHandler:
         response.raise_for_status()
         return response.json()
 
+    def get_diagram(self, process_instance_id):
+        """
+        获取流程图
+
+        :param process_instance_id:
+        :return:
+        """
+        url = self.url_config["diagram"].format(process_instance_id=process_instance_id)
+        response = self.session.get(url)
+        response.raise_for_status()
+        return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
+
 
 flowable_handle = FlowableHandler(settings.FLOWABLE_HOST, settings.FLOWABLE_USERNAME, settings.FLOWABLE_PASSWORD)
 
@@ -412,8 +425,8 @@ if __name__ == '__main__':
     # res = handle.delete_group("sorManager")
     # print(res)
 
-    res = handle.get_latest_process_task("appApplyProcess")
-    print(res)
+    # res = handle.get_latest_process_task("appApplyProcess")
+    # print(res)
 
     # res = handle.start_process("appApplyProcess", "pyflowable")
     # print(res)
@@ -443,4 +456,7 @@ if __name__ == '__main__':
     # print(res)
     #
     # res = handle.get_historic_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
+    # print(res)
+
+    # res = handle.get_diagram("b43d214f-e9db-11f0-a8fb-0242ac140002")
     # print(res)
