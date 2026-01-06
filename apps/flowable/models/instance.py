@@ -23,6 +23,7 @@ class Instance(BaseModel):
     number = models.CharField(max_length=100, help_text=_("编号"), db_comment=_("编号"))
     status = models.CharField(choices=STATUS_CHOICE, default="init", max_length=50, help_text=_("状态"),
                               db_comment=_('状态'))
+    record = models.JSONField(default=list, help_text=_("操作记录"), db_comment="操作记录")
 
     class Meta:
         verbose_name = "流程实例"

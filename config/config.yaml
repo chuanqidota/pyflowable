@@ -11,3 +11,7 @@ flowable:
   username: rest-admin
   password: test
   business_key: pyflowable
+redis:
+  host: 127.0.0.1:6379
+  db: 1
+  password:

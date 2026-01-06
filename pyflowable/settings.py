@@ -198,3 +198,26 @@ FLOWABLE_HOST = config["flowable"]["host"]
 FLOWABLE_USERNAME = config["flowable"]["username"]
 FLOWABLE_PASSWORD = config["flowable"]["password"]
 FLOWABLE_BUSINESS_KEY = config["flowable"]["business_key"]
+
+# redis配置
+REDIS_HOST = config["redis"]["host"]
+REDIS_DB = config["redis"]["db"]
+REDIS_PASSWORD = config["redis"]["password"] if config["redis"]["password"] else ""
+
+# 日期
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}/{REDIS_DB}'
+CELERY_RESULT_SERIALIZER = 'pickle'
+CELERY_ACCEPT_CONTENT = ['json', 'pickle']
+
+# 缓存
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CELERY_BROKER_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            # 可以添加压缩等选项[citation:1]
+        }
+    }
+}
