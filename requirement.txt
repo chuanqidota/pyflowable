@@ -9,3 +9,4 @@ PyYAML==6.0.3
 PyMySQL==1.1.2
 celery==5.6.2
 django-redis==6.0.0
+drf_spectacular==0.29.0

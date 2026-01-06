@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.generic import RedirectView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -28,6 +29,12 @@ urlpatterns = [
     # JWT Token
     path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # {"username":"","password":""}
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),  # {"refresh":"上面接口返回的refresh字段"}
+    # 获取 OpenAPI 架构文件
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # 可选的 Swagger UI 界面
+    path('api/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger'),
+    # 可选的 ReDoc 界面
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 api_urlpatterns = [

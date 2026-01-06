@@ -66,7 +66,7 @@ class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
     queryset = InstanceTask.objects.all()
     serializer_class = InstanceTaskSerializers
     search_fields = ["name", "key"]
-    filterset_fields = ["instance__name", "instance__number", "group__name", "group__alias", "assignee", "status"]
+    filterset_fields = ["instance__name", "instance__number", "group__name", "group__alias", "status"]
     ordering_fields = ["id", "create_time"]
     ordering = ["-id"]
 
@@ -75,3 +75,10 @@ class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
         if serializer == "group_user":
             return InstanceTaskHasGroupUserSerializers
         return super().get_serializer_class()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        assignee = self.request.query_params.get('assignee')
+        if assignee:
+            queryset = queryset.filter(assignee__contains=assignee)
+        return queryset

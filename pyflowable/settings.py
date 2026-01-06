@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'user.apps.UserConfig',
-    'flowable.apps.FlowableConfig'
+    'flowable.apps.FlowableConfig',
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -176,6 +177,9 @@ REST_FRAMEWORK = {
 
     'TIME_FORMAT': "%Y-%m-%d",
     'TIME_INPUT_FORMATS': ["%Y-%m-%d"],
+
+    # AutoSchema
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # 用户-认证
@@ -187,7 +191,7 @@ AUTHENTICATION_BACKENDS = [
 
 # 登录相关设置
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/api/user/'  # 登录后重定向的URL
+LOGIN_REDIRECT_URL = '/api/swagger/'  # 登录后重定向的URL
 LOGOUT_REDIRECT_URL = '/'  # 登出后重定向的URL
 
 # 默认为 True，设为 False 可以关闭自动添加斜杠
@@ -220,4 +224,13 @@ CACHES = {
             # 可以添加压缩等选项[citation:1]
         }
     }
+}
+
+# Spectacular 相关配置
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'pyflowable API',
+    'DESCRIPTION': '接口文档',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # 不提供单独的架构文件端点
+    # 其他配置项：https://drf-spectacular.readthedocs.io/en/latest/settings.html
 }
