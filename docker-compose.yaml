@@ -72,6 +72,12 @@ services:
       - flowable-rest # 明确声明依赖，确保flowable-rest先启动
     restart: unless-stopped
 
+  redis:
+    image: docker.1ms.run/library/redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+
   py_followable:
     restart: always
     build:
