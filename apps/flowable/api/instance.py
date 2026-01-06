@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter
 from rest_framework.viewsets import ModelViewSet
 
 from flowable.models.instance import Instance
@@ -8,6 +9,14 @@ from flowable.serializers.instance_task import InstanceTaskSerializers, Instance
 from user.mixins.login import LoginRequiredMixin
 
 
+@extend_schema_view(
+    list=extend_schema(summary="实例列表", tags=['实例']),
+    create=extend_schema(summary="实例创建", tags=['实例']),
+    retrieve=extend_schema(summary="实例详情", tags=['实例']),
+    update=extend_schema(summary="实例更新", tags=['实例']),
+    partial_update=extend_schema(summary="实例部份更新", tags=['实例']),
+    destroy=extend_schema(summary="实例删除", tags=['实例']),
+)
 class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
     """
         实例信息
@@ -58,7 +67,19 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
         else:
             return Instance.objects.none()
 
+    @extend_schema(parameters=[OpenApiParameter(name='status', enum=['all', 'pool', 'undo', 'applicant', 'handle'])])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
+
+@extend_schema_view(
+    list=extend_schema(summary="实例任务列表", tags=['实例任务']),
+    create=extend_schema(summary="实例任务创建", tags=['实例任务']),
+    retrieve=extend_schema(summary="实例任务详情", tags=['实例任务']),
+    update=extend_schema(summary="实例任务更新", tags=['实例任务']),
+    partial_update=extend_schema(summary="实例任务部份更新", tags=['实例任务']),
+    destroy=extend_schema(summary="实例任务删除", tags=['实例任务']),
+)
 class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
     """
         实例任务信息
@@ -82,3 +103,7 @@ class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
         if assignee:
             queryset = queryset.filter(assignee__contains=assignee)
         return queryset
+
+    @extend_schema(parameters=[OpenApiParameter(name='assignee')])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)

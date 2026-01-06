@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 from rest_framework.viewsets import ModelViewSet
 
 from flowable.models.process import Process
@@ -9,6 +10,14 @@ from flowable.serializers.process_group import ProcessGroupSerializers
 from user.mixins.login import LoginRequiredMixin
 
 
+@extend_schema_view(
+    list=extend_schema(summary="流程分组列表", tags=['流程分组管理']),
+    create=extend_schema(summary="流程分组创建", tags=['流程分组管理']),
+    retrieve=extend_schema(summary="流程分组详情", tags=['流程分组管理']),
+    update=extend_schema(summary="流程分组更新", tags=['流程分组管理']),
+    partial_update=extend_schema(summary="流程分组部份更新", tags=['流程分组管理']),
+    destroy=extend_schema(summary="流程分组删除", tags=['流程分组管理']),
+)
 class ProcessGroupViewSet(LoginRequiredMixin, ModelViewSet):
     """
         流程分组
@@ -21,6 +30,14 @@ class ProcessGroupViewSet(LoginRequiredMixin, ModelViewSet):
     ordering = ["-id"]
 
 
+@extend_schema_view(
+    list=extend_schema(summary="流程列表", tags=['流程管理']),
+    create=extend_schema(summary="流程创建", tags=['流程管理']),
+    retrieve=extend_schema(summary="流程详情", tags=['流程管理']),
+    update=extend_schema(summary="流程更新", tags=['流程管理']),
+    partial_update=extend_schema(summary="流程部份更新", tags=['流程管理']),
+    destroy=extend_schema(summary="流程删除", tags=['流程管理']),
+)
 class ProcessViewSet(LoginRequiredMixin, ModelViewSet):
     """
         流程定义
@@ -41,7 +58,19 @@ class ProcessViewSet(LoginRequiredMixin, ModelViewSet):
         else:
             return super().get_serializer_class()
 
+    @extend_schema(parameters=[OpenApiParameter(name='serializer', enum=['instance_list', 'attr_list'])])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
+
+@extend_schema_view(
+    list=extend_schema(summary="流程属性列表", tags=['流程属性管理']),
+    create=extend_schema(summary="流程属性创建", tags=['流程属性管理']),
+    retrieve=extend_schema(summary="流程属性详情", tags=['流程属性管理']),
+    update=extend_schema(summary="流程属性更新", tags=['流程属性管理']),
+    partial_update=extend_schema(summary="流程属性部份更新", tags=['流程属性管理']),
+    destroy=extend_schema(summary="流程属性删除", tags=['流程属性管理']),
+)
 class ProcessAttrViewSet(LoginRequiredMixin, ModelViewSet):
     """
         流程属性

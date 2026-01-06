@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import status, serializers
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,6 +11,17 @@ class ManualLoginView(APIView):
     tags = ["登录"]
     operation_id = "手动登录"
 
+    @extend_schema(
+        summary='用户登陆',
+        request=inline_serializer(
+            name='HandleRequestSerializer',
+            fields={
+                'username': serializers.CharField(help_text='用户名'),
+                'password': serializers.CharField(help_text='密码')
+            }
+        ),
+        tags=["用户"]
+    )
     def post(self, request):
         """
             手动登录

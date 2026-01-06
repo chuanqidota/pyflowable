@@ -1,3 +1,5 @@
+from drf_spectacular.utils import inline_serializer, extend_schema, OpenApiExample
+from rest_framework import serializers
 from rest_framework.views import APIView
 
 from flowable.service.flowable import ActionHandle
@@ -11,6 +13,19 @@ class SubmitView(LoginRequiredMixin, APIView):
         提交工单
     """
 
+    @extend_schema(
+        summary='提交工单',
+        request=inline_serializer(
+            name='SubmitRequestSerializer',
+            fields={
+                'process_key': serializers.CharField(help_text='流程标识键'),
+                'name': serializers.CharField(help_text='工单名称'),
+                'number': serializers.CharField(help_text='工单编号'),
+                'extra_attrs': serializers.DictField(help_text='额外参数')
+            }
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("process_key", "name", "number", "extra_attrs")
     def post(self, request):
         data = request.data
@@ -28,6 +43,14 @@ class RepealView(LoginRequiredMixin, APIView):
         撤销工单
     """
 
+    @extend_schema(
+        summary='撤销工单',
+        request=inline_serializer(
+            name='RepealRequestSerializer',
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
@@ -41,6 +64,14 @@ class ClaimView(LoginRequiredMixin, APIView):
         认领任务
     """
 
+    @extend_schema(
+        summary='认领工单',
+        request=inline_serializer(
+            name='ClaimRequestSerializer',
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
@@ -55,6 +86,14 @@ class DelegateView(LoginRequiredMixin, APIView):
         指派任务
     """
 
+    @extend_schema(
+        summary='指派工单',
+        request=inline_serializer(
+            name='DelegateRequestSerializer',
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
@@ -66,9 +105,17 @@ class DelegateView(LoginRequiredMixin, APIView):
 
 class ResolveView(LoginRequiredMixin, APIView):
     """
-        退回任务
+        退回工单
     """
 
+    @extend_schema(
+        summary='退回工单',
+        request=inline_serializer(
+            name='ResolveRequestSerializer',
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
@@ -79,9 +126,20 @@ class ResolveView(LoginRequiredMixin, APIView):
 
 class HandleView(LoginRequiredMixin, APIView):
     """
-        审批工单
+        处理/审批工单
     """
 
+    @extend_schema(
+        summary='处理/审批工单',
+        request=inline_serializer(
+            name='HandleRequestSerializer',
+            fields={
+                'instance_id': serializers.IntegerField(help_text='实例ID'),
+                'allow': serializers.IntegerField(help_text='是否通过')
+            }
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
@@ -97,6 +155,14 @@ class DiagramView(LoginRequiredMixin, APIView):
         获取流程图
     """
 
+    @extend_schema(
+        summary='获取流程图',
+        request=inline_serializer(
+            name='DiagramRequestSerializer',
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+        ),
+        tags=["工单操作"]
+    )
     @kwargs_required("instance_id")
     def get(self, request):
         instance_id = request.query_params.get("instance_id")
