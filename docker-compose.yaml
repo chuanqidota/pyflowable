@@ -77,13 +77,3 @@ services:
     restart: always
     ports:
       - "6379:6379"
-
-  py_followable:
-    restart: always
-    build:
-      context: . # 指定Dockerfile文件所在路径
-      dockerfile: Dockerfile # 指定Dockerfile文件名称
-    image: pyflowable:v1
-    container_name: pyflowable
-    ports:
-      - "8000:8000"
