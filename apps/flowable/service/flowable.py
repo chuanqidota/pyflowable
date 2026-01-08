@@ -75,9 +75,11 @@ class ActionHandle:
         process_attr_qs = ProcessAttr.objects.filter(process=process).filter(code__in=list(extra_attrs.keys()))
         attr_value_bulk_data = []
         for process_attr_q in process_attr_qs:
-            attr_value_bulk_data.append({"instance": instance,
-                                         "attr": process_attr_q,
-                                         "value": str(extra_attrs.get(process_attr_q.code))})
+            attr_value_bulk_data.append(InstanceAttrValue(
+                instance=instance,
+                attr=process_attr_q,
+                value=str(extra_attrs.get(process_attr_q.code))
+            ))
         InstanceAttrValue.objects.bulk_create(attr_value_bulk_data)
 
         # 构建参数
@@ -88,6 +90,7 @@ class ActionHandle:
         kwargs.update({
             "instance_id": instance.id,
             "process_id": process.id,
+            "flowable_id": instance.flowable_id,
             "task_id": task_id
         })
         # 反射对应函数
@@ -193,12 +196,12 @@ class ActionHandle:
         return True, "执行成功"
 
     @staticmethod
-    def handle(instance_id, username, allow):
+    def handle(instance_id, allow, username):
         """
             审批处理工单
         :param instance_id: 流程实例ID
-        :param username: 用户英文名
         :param allow: allow是flowable网关上的变量
+        :param username: 用户英文名
         :return:
         """
         instance = Instance.objects.filter(id=instance_id).first()
@@ -206,19 +209,21 @@ class ActionHandle:
             raise ValueError("没有查询到实例信息")
         process_key = instance.process.key
         flowable_id = instance.flowable_id
-        tasks = flowable_handle.get_tasks(flowable_id).get("data")
+        tasks = flowable_handle.get_tasks(flowable_id)
         if not tasks:
             raise ValueError("flowable没有找到任务")
 
-        if username not in [item.get("assignee") for item in tasks]:
-            raise ValueError("人员不在审批节点")
-
         task_key = tasks[0].get("taskDefinitionKey")
         task_id = tasks[0].get("id")
+        print(task_key, instance.id, username)
+        if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
+            raise ValueError("人员不在审批节点")
+
         kwargs = instance.instance_attr_value_dict
         kwargs.update({
             "instance_id": instance.id,
             "process_id": instance.process.id,
+            "flowable_id": instance.flowable_id,
             "task_id": task_id,
             "username": username,
             "allow": allow

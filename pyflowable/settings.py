@@ -181,6 +181,9 @@ REST_FRAMEWORK = {
 
     # AutoSchema
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+
+    # 错误处理
+    'EXCEPTION_HANDLER': 'utils.exceptions.exception_handler',
 }
 
 # 用户-认证
@@ -233,5 +236,6 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': '接口文档',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,  # 不提供单独的架构文件端点
+    'COMPONENT_SPLIT_REQUEST': True,
     # 其他配置项：https://drf-spectacular.readthedocs.io/en/latest/settings.html
 }

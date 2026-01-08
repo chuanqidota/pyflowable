@@ -27,7 +27,7 @@ class InstanceTask(BaseModel):
         app_label = "flowable"
 
     @property
-    def group_display(self):
+    def group_display(self) -> str:
         """
             组名称
         :return:

@@ -50,7 +50,7 @@ class User(BaseModel):
         return True
 
     @property
-    def group_name(self):
+    def group_name(self) -> str:
         """
             组名称
         :return:

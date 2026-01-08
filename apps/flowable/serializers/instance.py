@@ -14,10 +14,10 @@ class InstanceSerializers(serializers.ModelSerializer):
         model = Instance
         fields = [f.name for f in Instance._meta.get_fields()
                   if not (hasattr(f, 'is_relation') and f.is_relation)] + \
-                 ["status_display", "applicant_display"]
+                 ["status_display", "applicant_display", "process", "applicant"]
 
     @staticmethod
-    def get_status_display(obj):
+    def get_status_display(obj) -> str:
         """
             状态展示
         :param obj:

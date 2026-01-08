@@ -13,7 +13,7 @@ class ProcessGroup(BaseModel):
         app_label = "flowable"
 
     @property
-    def process_list(self):
+    def process_list(self) -> list:
         """
             流程列表
         :return:

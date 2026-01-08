@@ -1,6 +1,4 @@
-from django.db.models.signals import post_save
-from django.db.models.signals import post_delete
-
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from flowable.utils.flowable import flowable_handle
@@ -10,7 +8,7 @@ from user.models import Group
 @receiver(post_save, sender=Group)
 def create_group(sender, instance=None, created=False, **kwargs):
     if created:
-        # 执行创建组后的操作
+        print(instance.alias, instance.name)
         if not flowable_handle.create_group(instance.alias, instance.name):
             raise ValueError("flowable创建组失败")
 

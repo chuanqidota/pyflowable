@@ -63,8 +63,7 @@ class FlowableHandler:
         if _type:
             payload["type"] = _type
         response = self.session.post(url, json=payload)
-        print(response.text)
-        if response.ok:
+        if not response.ok:
             return False
         return True
 
@@ -233,8 +232,7 @@ class FlowableHandler:
 
         响应示例:
         -----------
-             {
-                "data": [
+              [
                     {
                     "id": "89cd5718-dbb3-11f0-9b16-0242ac150002",
                     "url": "http://127.0.0.1:8081/flowable-rest/service/runtime/tasks/89cd5718-dbb3-11f0-9b16-0242ac150002",
@@ -267,13 +265,8 @@ class FlowableHandler:
                     "processDefinitionUrl": "http://127.0.0.1:8081/flowable-rest/service/repository/process-definitions/appApplyProcess:14:462bb2bf-db2f-11f0-8f57-0242ac150003",
                     "variables": []
                     }
-                ],
-                "total": 1,
-                "start": 0,
-                "sort": "id",
-                "order": "asc",
-                "size": 1
-                }
+            ]
+
         """
         url = self.url_config["tasks"]
         params = {}
@@ -290,21 +283,21 @@ class FlowableHandler:
             return False, response.text
         return response.json().get("data")
 
-    def complete_task(self, task_id, user_id=None, variables=None):
+    def complete_task(self, task_id, username=None, variables=None):
         """
         完成任务
         
         :param self: 说明
         :param task_id: 说明 任务ID
-        :param user_id: 说明 用户ID
+        :param username: 说明 用户英文名
         :param variables: 说明 流程变量
         """
         url = self.url_config["complete_task"].format(task_id=task_id)
         payload = {
             "action": "complete",
         }
-        if user_id:
-            payload["assignee"] = user_id
+        if username:
+            payload["assignee"] = username
         if variables:
             payload["variables"] = [{"name": k, "value": v} for k, v in variables.items()]
         response = self.session.post(url, json=payload)

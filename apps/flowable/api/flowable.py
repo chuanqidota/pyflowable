@@ -1,10 +1,10 @@
-from drf_spectacular.utils import inline_serializer, extend_schema, OpenApiExample
+from drf_spectacular.utils import inline_serializer, extend_schema
 from rest_framework import serializers
 from rest_framework.views import APIView
 
 from flowable.service.flowable import ActionHandle
 from flowable.utils.decorator import kwargs_required
-from flowable.utils.response import SuccessResp, FailResp
+from utils.response import SuccessResp, FailResp
 from user.mixins.login import LoginRequiredMixin
 
 
@@ -24,9 +24,19 @@ class SubmitView(LoginRequiredMixin, APIView):
                 'extra_attrs': serializers.DictField(help_text='额外参数')
             }
         ),
+        responses={
+            200: inline_serializer(
+                name='SubmitSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
-    @kwargs_required("process_key", "name", "number", "extra_attrs")
+    @kwargs_required("process_key", "name", "extra_attrs")
     def post(self, request):
         data = request.data
         process_key = data.get("process_key")
@@ -34,8 +44,11 @@ class SubmitView(LoginRequiredMixin, APIView):
         number = data.get("number")
         extra_attrs = data.get("extra_attrs")
         username = request.user.username
-        submit_state, submit_msg = ActionHandle().submit(process_key, username, name, number, extra_attrs)
-        return SuccessResp(submit_msg) if submit_state else FailResp(submit_msg)
+        try:
+            submit_state, submit_msg = ActionHandle().submit(process_key, username, name, number, extra_attrs)
+            return SuccessResp(submit_msg) if submit_state else FailResp(submit_msg)
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class RepealView(LoginRequiredMixin, APIView):
@@ -49,14 +62,27 @@ class RepealView(LoginRequiredMixin, APIView):
             name='RepealRequestSerializer',
             fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
         ),
+        responses={
+            200: inline_serializer(
+                name='RepealSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
         instance_id = data.get("instance_id")
-        repeal_state, repeal_msg = ActionHandle().repeal(instance_id)
-        return SuccessResp(repeal_msg) if repeal_state else FailResp(repeal_msg)
+        try:
+            repeal_state, repeal_msg = ActionHandle().repeal(instance_id)
+            return SuccessResp(repeal_msg) if repeal_state else FailResp(repeal_msg)
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class ClaimView(LoginRequiredMixin, APIView):
@@ -70,6 +96,16 @@ class ClaimView(LoginRequiredMixin, APIView):
             name='ClaimRequestSerializer',
             fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
         ),
+        responses={
+            200: inline_serializer(
+                name='ClaimSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")
@@ -77,8 +113,11 @@ class ClaimView(LoginRequiredMixin, APIView):
         data = request.data
         instance_id = data.get("instance_id")
         username = request.user.username
-        claim_state, claim_msg = ActionHandle().claim(instance_id, username)
-        return SuccessResp(claim_msg) if claim_state else FailResp(claim_msg)
+        try:
+            claim_state, claim_msg = ActionHandle().claim(instance_id, username)
+            return SuccessResp(claim_msg) if claim_state else FailResp(claim_msg)
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class DelegateView(LoginRequiredMixin, APIView):
@@ -92,6 +131,16 @@ class DelegateView(LoginRequiredMixin, APIView):
             name='DelegateRequestSerializer',
             fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
         ),
+        responses={
+            200: inline_serializer(
+                name='DelegateSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")
@@ -99,8 +148,11 @@ class DelegateView(LoginRequiredMixin, APIView):
         data = request.data
         instance_id = data.get("instance_id")
         username = request.user.username
-        delegate_state, delegate_msg = ActionHandle().delegate(instance_id, username)
-        return SuccessResp(delegate_msg) if delegate_state else FailResp(delegate_msg)
+        try:
+            delegate_state, delegate_msg = ActionHandle().delegate(instance_id, username)
+            return SuccessResp(delegate_msg) if delegate_state else FailResp(delegate_msg)
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class ResolveView(LoginRequiredMixin, APIView):
@@ -114,14 +166,27 @@ class ResolveView(LoginRequiredMixin, APIView):
             name='ResolveRequestSerializer',
             fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
         ),
+        responses={
+            200: inline_serializer(
+                name='ResolveSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")
     def post(self, request):
         data = request.data
         instance_id = data.get("instance_id")
-        resolve_state, resolve_msg = ActionHandle().resolve(instance_id)
-        return SuccessResp(resolve_msg) if resolve_state else FailResp(resolve_msg)
+        try:
+            resolve_state, resolve_msg = ActionHandle().resolve(instance_id)
+            return SuccessResp(resolve_msg) if resolve_state else FailResp(resolve_msg)
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class HandleView(LoginRequiredMixin, APIView):
@@ -138,6 +203,16 @@ class HandleView(LoginRequiredMixin, APIView):
                 'allow': serializers.IntegerField(help_text='是否通过')
             }
         ),
+        responses={
+            200: inline_serializer(
+                name='HandleSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")
@@ -146,8 +221,11 @@ class HandleView(LoginRequiredMixin, APIView):
         instance_id = data.get("instance_id")
         allow = data.get("allow")
         username = request.user.username
-        ActionHandle().handle(instance_id, allow, username)
-        return SuccessResp(msg="后台执行中")
+        try:
+            ActionHandle().handle(instance_id, allow, username)
+            return SuccessResp(msg="后台执行中")
+        except Exception as e:
+            return FailResp(repr(e))
 
 
 class DiagramView(LoginRequiredMixin, APIView):
@@ -161,6 +239,16 @@ class DiagramView(LoginRequiredMixin, APIView):
             name='DiagramRequestSerializer',
             fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
         ),
+        responses={
+            200: inline_serializer(
+                name='DiagramSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default={"diagram": ""}),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["工单操作"]
     )
     @kwargs_required("instance_id")

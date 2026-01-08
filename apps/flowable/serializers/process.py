@@ -13,7 +13,7 @@ class ProcessSerializers(serializers.ModelSerializer):
         model = Process
         fields = [f.name for f in Process._meta.get_fields()
                   if not (hasattr(f, 'is_relation') and f.is_relation)] + \
-                 ["mentor_display"]
+                 ["mentor_display", "mentor", "group"]
 
 
 class ProcessHasInstanceSerializers(serializers.ModelSerializer):

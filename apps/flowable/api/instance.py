@@ -44,19 +44,20 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
             return super().get_queryset()
         # 流程池-根据人员分组查询流程
         elif status == "pool":
-            instance_task_qs = InstanceTask.objects.filter(group__group_user=self.request.user, status="ing")
+            instance_task_qs = InstanceTask.objects.filter(group__group_user=self.request.user, status="ing"). \
+                exclude(assignee__contains=[self.request.user.username])
             qs = Instance.objects.filter(id__in=[instance_task_q.instance.id for instance_task_q in instance_task_qs],
                                          status__in=["init", "ing"])
             return qs
         # 待办流程
-        elif status == "undo":
+        elif status == "todo":
             instance_task_qs = InstanceTask.objects.filter(assignee__contains=[self.request.user.username],
                                                            status="ing")
             qs = Instance.objects.filter(id__in=[instance_task_q.instance.id for instance_task_q in instance_task_qs],
                                          status__in=["init", "ing"])
             return qs
         # 我的工单
-        elif status == "applicant":
+        elif status == "my":
             return Instance.objects.filter(applicant=self.request.user)
         # 我的处理
         elif status == "handle":
@@ -67,7 +68,7 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
         else:
             return Instance.objects.none()
 
-    @extend_schema(parameters=[OpenApiParameter(name='status', enum=['all', 'pool', 'undo', 'applicant', 'handle'])])
+    @extend_schema(parameters=[OpenApiParameter(name='status', enum=['all', 'pool', 'todo', 'my', 'handle'])])
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 

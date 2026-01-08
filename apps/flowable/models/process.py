@@ -19,7 +19,7 @@ class Process(BaseModel):
         app_label = "flowable"
 
     @property
-    def mentor_display(self):
+    def mentor_display(self) -> str:
         """
             流程顾问展示
         :return:

@@ -14,12 +14,22 @@ class ManualLoginView(APIView):
     @extend_schema(
         summary='用户登陆',
         request=inline_serializer(
-            name='HandleRequestSerializer',
+            name='ManualRequestSerializer',
             fields={
                 'username': serializers.CharField(help_text='用户名'),
                 'password': serializers.CharField(help_text='密码')
             }
         ),
+        responses={
+            200: inline_serializer(
+                name='ManualSuccessResponse',
+                fields={
+                    'result': serializers.DictField(default=dict),
+                    'msg': serializers.CharField(default='执行成功'),
+                    'code': serializers.CharField(default="0000")
+                }
+            )
+        },
         tags=["用户"]
     )
     def post(self, request):

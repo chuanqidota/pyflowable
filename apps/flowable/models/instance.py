@@ -53,7 +53,7 @@ class Instance(BaseModel):
         return self.instance_task.all().values()
 
     @property
-    def applicant_display(self):
+    def applicant_display(self) -> str:
         """
             申请人展示
         :return:

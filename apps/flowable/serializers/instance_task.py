@@ -17,7 +17,7 @@ class InstanceTaskSerializers(serializers.ModelSerializer):
                  ["status_display", "group_display"]
 
     @staticmethod
-    def get_status_display(obj):
+    def get_status_display(obj) -> str:
         return obj.get_status_display()
 
 
