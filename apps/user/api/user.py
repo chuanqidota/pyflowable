@@ -128,7 +128,6 @@ class DeleteGroupView(LoginRequiredMixin, APIView):
     retrieve=extend_schema(summary="用户详情", tags=['用户']),
     update=extend_schema(summary="用户更新", tags=['用户']),
     partial_update=extend_schema(summary="用户部份更新", tags=['用户']),
-    destroy=extend_schema(summary="用户删除", tags=['用户']),
 )
 class UserViewSet(LoginRequiredMixin, ModelViewSet):
     """
@@ -145,3 +144,17 @@ class UserViewSet(LoginRequiredMixin, ModelViewSet):
         if self.action == "create":
             return CreateUserSerializer
         return super().get_serializer_class()
+
+    @extend_schema(summary="用户删除", tags=['用户'])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+    @extend_schema(summary="批量删除用户", tags=['用户'],
+                   parameters=[OpenApiParameter(name='id__in', description="英文逗号分割", required=True)])
+    @action(methods=['delete'], detail=False, url_path='bulk-destroy')
+    def bulk_destroy(self, request, *args, **kwargs):
+        id__in = request.query_params.get("id__in")
+        if id__in:
+            queryset = self.get_queryset().filter(id__in=id__in.split(","))
+            queryset.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
