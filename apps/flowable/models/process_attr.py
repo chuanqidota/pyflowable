@@ -21,5 +21,6 @@ class ProcessAttr(BaseModel):
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, help_text=_("属性类型"), db_comment=_("属性类型"))
 
     class Meta:
+        db_table = "process_attr"
         verbose_name = "流程属性"
         app_label = "flowable"

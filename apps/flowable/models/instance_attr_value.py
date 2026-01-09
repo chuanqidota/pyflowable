@@ -14,5 +14,6 @@ class InstanceAttrValue(BaseModel):
     value = models.TextField(help_text=_("属性值"), db_comment=_("属性值"))
 
     class Meta:
+        db_table = "instance_attr_value"
         verbose_name = "实例属性值"
         app_label = "flowable"

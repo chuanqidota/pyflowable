@@ -12,11 +12,12 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import sys
+from pathlib import Path
 
 from utils.yaml import load_yaml_config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 
 # 加载配置

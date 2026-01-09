@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from flowable.models.process_attr import ProcessAttr
 
@@ -14,6 +15,13 @@ class ProcessAttrSerializers(serializers.ModelSerializer):
         fields = [f.name for f in ProcessAttr._meta.get_fields()
                   if not (hasattr(f, 'is_relation') and f.is_relation)] + \
                  ["type_display", "process"]
+
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ProcessAttr.objects.all(),
+                fields=['process', 'code']
+            )
+        ]
 
     @staticmethod
     def get_type_display(obj) -> str:

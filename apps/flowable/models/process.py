@@ -15,6 +15,7 @@ class Process(BaseModel):
     sort = models.IntegerField(help_text=_("排序"), db_comment=_("排序"))
 
     class Meta:
+        db_table = "process"
         verbose_name = "流程定义"
         app_label = "flowable"
 

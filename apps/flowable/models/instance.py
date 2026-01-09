@@ -26,6 +26,7 @@ class Instance(BaseModel):
     record = models.JSONField(default=list, help_text=_("操作记录"), db_comment="操作记录")
 
     class Meta:
+        db_table = "instance"
         verbose_name = "流程实例"
         app_label = "flowable"
 

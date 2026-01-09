@@ -23,6 +23,7 @@ class InstanceTask(BaseModel):
     params = models.JSONField(default=dict, help_text=_("参数"), db_comment=_("参数"))
 
     class Meta:
+        db_table = "instance_task"
         verbose_name = "实例任务"
         app_label = "flowable"
 
