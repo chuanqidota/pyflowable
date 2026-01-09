@@ -301,6 +301,9 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/api/swagger/'  # 登录后重定向的URL
 LOGOUT_REDIRECT_URL = '/'  # 登出后重定向的URL
 
+# session 过期时间
+SESSION_COOKIE_AGE = 24 * 3600
+
 # 默认为 True，设为 False 可以关闭自动添加斜杠
 APPEND_SLASH = False
 
@@ -341,4 +344,11 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,  # 不提供单独的架构文件端点
     'COMPONENT_SPLIT_REQUEST': True,
     # 其他配置项：https://drf-spectacular.readthedocs.io/en/latest/settings.html
+
+    'SWAGGER_UI_SETTINGS': {
+        # 尝试在UI中显示登出按钮
+        'displayOperationId': False,
+        'filter': True,
+    }
+
 }

@@ -129,7 +129,8 @@ class DelegateView(LoginRequiredMixin, APIView):
         summary='指派工单',
         request=inline_serializer(
             name='DelegateRequestSerializer',
-            fields={'instance_id': serializers.IntegerField(help_text='实例ID')}
+            fields={'instance_id': serializers.IntegerField(help_text='实例ID'),
+                    'username': serializers.CharField(help_text='用户名')}
         ),
         responses={
             200: inline_serializer(
@@ -147,7 +148,7 @@ class DelegateView(LoginRequiredMixin, APIView):
     def post(self, request):
         data = request.data
         instance_id = data.get("instance_id")
-        username = request.user.username
+        username = data.get("username")
         try:
             delegate_state, delegate_msg = ActionHandle().delegate(instance_id, username)
             return SuccessResp(delegate_msg) if delegate_state else FailResp(delegate_msg)

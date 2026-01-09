@@ -21,6 +21,7 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
     """
         实例信息
     """
+    http_method_names = ["get"]
     queryset = Instance.objects.all()
     serializer_class = InstanceSerializers
     search_fields = ["name", "number"]
@@ -85,6 +86,7 @@ class InstanceTaskViewSet(LoginRequiredMixin, ModelViewSet):
     """
         实例任务信息
     """
+    http_method_names = ["get"]
     queryset = InstanceTask.objects.all()
     serializer_class = InstanceTaskSerializers
     search_fields = ["name", "key"]

@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import time
 from operator import methodcaller
 
 from django.conf import settings
@@ -15,8 +16,25 @@ from user.models import User, Group
 
 class ActionHandle:
 
-    def __init__(self):
+    def __init__(self, user=None):
         self.business_key = settings.FLOWABLE_BUSINESS_KEY
+        self.user = user
+
+    def __action(self, allow=None):
+        username = f"{self.user.name}-{self.user.username}" if self.user else None
+        if allow:
+            desc = "同意"
+        else:
+            desc = "驳回"
+        record = {
+            "submit": {"username": username, "action": "提交工单", "desc": "", "time": time.strftime("%F %T")},
+            "repeal": {"username": username, "action": "撤销工单", "desc": "", "time": time.strftime("%F %T")},
+            "claim": {"username": username, "action": "认领工单", "desc": "", "time": time.strftime("%F %T")},
+            "delegate": {"username": username, "action": "指派工单", "desc": "", "time": time.strftime("%F %T")},
+            "resolve": {"username": username, "action": "退回工单", "desc": "", "time": time.strftime("%F %T")},
+            "handle": {"username": username, "action": "处理工单", "desc": desc, "time": time.strftime("%F %T")},
+        }
+        return record
 
     def submit(self, process_key, username, name, number=None, extra_attrs=None):
         """
@@ -52,7 +70,9 @@ class ActionHandle:
             "flowable_id": flowable_id,
             "name": name,
             "number": number,
-            "status": "ing"
+            "status": "ing",
+            "record": [{"username": f"{self.user.name}-{self.user.username}" if self.user else None,
+                        "action": "提交工单", "desc": "", "time": time.strftime("%F %T")}]
         }
         instance = Instance.objects.create(**instance_data)
 
@@ -98,7 +118,7 @@ class ActionHandle:
         module = importlib.import_module("apps.flowable.process")
         model = getattr(module, process_key)
         caller(model())
-        return True, "执行成功"
+        return True, {"instance_id": instance.id}
 
     @staticmethod
     def repeal(instance_id):
@@ -215,7 +235,6 @@ class ActionHandle:
 
         task_key = tasks[0].get("taskDefinitionKey")
         task_id = tasks[0].get("id")
-        print(task_key, instance.id, username)
         if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
             raise ValueError("人员不在审批节点")
 

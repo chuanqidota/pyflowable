@@ -24,7 +24,7 @@ class FlowableHandler:
             "process_model": f"{self.url_prefix}/repository/process-definitions/{{process_id}}/model",  # 查询流程详情
             "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
             "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
-            "delete_process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 删除流程实例
+            "delete_instance": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}",  # 删除
             "diagram": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}/diagram",  # 获取流程图
 
             "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
@@ -42,7 +42,6 @@ class FlowableHandler:
         """
         url = self.url_config["get_groups"]
         response = self.session.get(url)
-        print(response.text)
         res = response.json()
         return [{"id": i.get("id"), "name": i.get("name")} for i in res.get("data")]
 
@@ -55,6 +54,9 @@ class FlowableHandler:
         :return:
             True/False
         """
+        groups = self.get_groups()
+        if group_id in [i.get("id") for i in groups]:
+            return True
         url = self.url_config["create_group"]
         payload = {
             "id": group_id,
@@ -174,18 +176,15 @@ class FlowableHandler:
             return None
         return response.json()
 
-    def delete_process_instance(self, process_instance_id, reason=None):
+    def delete_process_instance(self, process_instance_id):
         """
             删除流程实例
         :param self: 说明
         :param process_instance_id: 说明 流程实例ID
-        :param reason: 说明 删除原因
         :return: True/False
         """
-        url = self.url_config["delete_process_instance"].format(process_instance_id=process_instance_id)
+        url = self.url_config["delete_instance"].format(process_instance_id=process_instance_id)
         params = {}
-        if reason:
-            params["reason"] = reason
         response = self.session.delete(url, params=params)
         print(response.text)
         if response.status_code != 204:

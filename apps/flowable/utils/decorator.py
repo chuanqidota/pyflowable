@@ -1,4 +1,3 @@
-import json
 from functools import wraps
 
 from flowable.models.instance import Instance
@@ -47,9 +46,10 @@ def finish_task(func):
         instance_id = kwargs.get("instance_id")
         task_id = kwargs.get("task_id")
         flowable_id = kwargs.get("flowable_id")
+        diagram = flowable_handle.get_diagram(flowable_id)
         task_key = func.__name__
         instance_qs = InstanceTask.objects.filter(instance__id=instance_id, key=task_key)
-        instance_qs.update(status="ing", params=kwargs)
+        instance_qs.update(status="ing", params=kwargs, diagram=diagram)
         try:
             r = func(*args, **kwargs)
             if isinstance(r, dict):
@@ -59,7 +59,8 @@ def finish_task(func):
                 f_state, msg = flowable_handle.complete_task(task_id, username=username, variables=variables)
                 if not f_state:
                     raise ValueError(f"flowable完成任务失败: {msg}")
-                instance_qs.update(status="finish")
+                diagram = flowable_handle.get_diagram(flowable_id)
+                instance_qs.update(status="finish", diagram=diagram)
 
                 # 下一个任务
                 next_task_key = flowable_handle.get_tasks(flowable_id)[0].get("taskDefinitionKey")
@@ -91,12 +92,17 @@ def complete_task(func):
         r = func(*args, **kwargs)
         task_id = kwargs.get("task_id")
         instance_id = kwargs.get("instance_id")
+        flowable_id = kwargs.get("flowable_id")
         f_state, msg = flowable_handle.complete_task(task_id)
         if not f_state:
             raise ValueError(f"flowable完成任务失败: {msg}")
         task_key = func.__name__
-        InstanceTask.objects.filter(instance__id=instance_id, key=task_key).update(status="finish", params=kwargs)
+        diagram = flowable_handle.get_diagram(flowable_id)
+        InstanceTask.objects.filter(instance__id=instance_id, key=task_key).update(status="finish",
+                                                                                   params=kwargs,
+                                                                                   diagram=diagram)
         Instance.objects.filter(id=instance_id).update(status="complete")
+        flowable_handle.delete_process_instance(kwargs.get("flowable_id"))
         return r
 
     return wrapper
