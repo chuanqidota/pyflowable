@@ -21,6 +21,7 @@ class User(BaseModel):
     objects = UserManager()
 
     class Meta:
+        db_table = "user"
         verbose_name = '用户'
         app_label = 'user'
 

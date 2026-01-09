@@ -9,6 +9,7 @@ class Group(BaseModel):
     alias = models.CharField(max_length=100, null=True, blank=True, help_text='组别名', db_comment=_('用户组别名'))
 
     class Meta:
+        db_table = "group"
         verbose_name = '用户组'
         app_label = 'user'
 
