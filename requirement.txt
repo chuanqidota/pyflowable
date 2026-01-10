@@ -1,6 +1,7 @@
 -i https://mirrors.aliyun.com/pypi/simple
 django==6.0
 djangorestframework==3.16.1
+djangorestframework-stubs==3.16.6
 djangorestframework_simplejwt==5.5.1
 cryptography==42.0.5
 requests==2.32.5

@@ -71,8 +71,7 @@ class ActionHandle:
             "name": name,
             "number": number,
             "status": "ing",
-            "record": [{"username": f"{self.user.name}-{self.user.username}" if self.user else None,
-                        "action": "提交工单", "desc": "", "time": time.strftime("%F %T")}]
+            "record": [self.__action()["submit"]]
         }
         instance = Instance.objects.create(**instance_data)
 
@@ -120,8 +119,7 @@ class ActionHandle:
         caller(model())
         return True, {"instance_id": instance.id}
 
-    @staticmethod
-    def repeal(instance_id):
+    def repeal(self, instance_id):
         """
             撤销流程
         :param instance_id: 流程实例ID
@@ -130,14 +128,15 @@ class ActionHandle:
         instance = Instance.objects.filter(id=instance_id).first()
         if not instance:
             return False, f"没于流程示例: {instance_id}"
-
+        record = instance.record
+        record.append(self.__action().get("repeal"))
+        instance.record = record
         flowable_handle.delete_process_instance(instance.flowable_id)
         instance.status = "cancel"
         instance.save()
         return True, "执行成功"
 
-    @staticmethod
-    def claim(instance_id, username):
+    def claim(self, instance_id, username):
         """
             认领任务
         :param instance_id: 流程实例ID
@@ -159,12 +158,15 @@ class ActionHandle:
         if not claim_state:
             return False, f"人员: {username} 认领失败: {claim_msg}"
 
+        record = instance.record
+        record.append(self.__action().get("claim"))
+        instance.record = record
+        instance.save()
         InstanceTask.objects.filter(instance=instance, key=task_key).update(**{"assignee": [username]})
 
         return True, "执行成功"
 
-    @staticmethod
-    def delegate(instance_id, username):
+    def delegate(self, instance_id, username):
         """
             指派任务
         :param instance_id: 流程实例ID
@@ -186,12 +188,15 @@ class ActionHandle:
         if not assign_state:
             return False, f"人员: {username} 指派失败: {assign_msg}"
 
+        record = instance.record
+        record.append(self.__action().get("delegate"))
+        instance.record = record
+        instance.save()
         InstanceTask.objects.filter(instance=instance, key=task_key).update(**{"assignee": [username]})
 
         return True, "执行成功"
 
-    @staticmethod
-    def resolve(instance_id):
+    def resolve(self, instance_id):
         """
             退回任务
         :param instance_id: 流程实例ID
@@ -211,12 +216,15 @@ class ActionHandle:
         if not resolve_state:
             return False, f"退回失败: {resolve_msg}"
 
+        record = instance.record
+        record.append(self.__action().get("resolve"))
+        instance.record = record
+        instance.save()
         InstanceTask.objects.filter(instance=instance, key=task_key).update(**{"assignee": []})
 
         return True, "执行成功"
 
-    @staticmethod
-    def handle(instance_id, allow, username):
+    def handle(self, instance_id, allow, username):
         """
             审批处理工单
         :param instance_id: 流程实例ID
@@ -237,6 +245,11 @@ class ActionHandle:
         task_id = tasks[0].get("id")
         if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
             raise ValueError("人员不在审批节点")
+
+        record = instance.record
+        record.append(self.__action(allow).get("handle"))
+        instance.record = record
+        instance.save()
 
         kwargs = instance.instance_attr_value_dict
         kwargs.update({
