@@ -101,12 +101,11 @@ def complete_task(func):
         if not f_state:
             raise ValueError(f"flowable完成任务失败: {msg}")
         task_key = func.__name__
-        diagram = flowable_handle.get_diagram(flowable_id)
         InstanceTask.objects.filter(instance__id=instance_id, key=task_key).update(status="finish",
-                                                                                   params=kwargs,
-                                                                                   diagram=diagram)
-        Instance.objects.filter(id=instance_id).update(status="complete")
-        flowable_handle.delete_process_instance(kwargs.get("flowable_id"))
+                                                                                   params=kwargs)
+        diagram = flowable_handle.get_diagram(flowable_id)
+        Instance.objects.filter(id=instance_id).update(status="complete", diagram=diagram)
+        flowable_handle.delete_process_instance(flowable_id)
         return r
 
     return wrapper
