@@ -15,23 +15,35 @@ class FlowableHandler:
         self.session.headers.update({'Content-Type': 'application/json'})
         self.url_prefix = f"{self.endpoint}/flowable-rest/service"
         self.url_config = {
+            # 用户组管理
             "get_groups": f"{self.url_prefix}/identity/groups",  # 查询用户组列表
             "create_group": f"{self.url_prefix}/identity/groups",  # 创建用户组
             "delete_group": f"{self.url_prefix}/identity/groups/{{group_id}}",  # 删除用户组
 
+            # 流程实例管理
             "start_process": f"{self.url_prefix}/runtime/process-instances",  # 启动流程
-            "process_definitions": f"{self.url_prefix}/repository/process-definitions",  # 查询流程版本定义
-            "process_model": f"{self.url_prefix}/repository/process-definitions/{{process_id}}/model",  # 查询流程详情
             "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
             "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
-            "delete_instance": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}",  # 删除
-            "diagram": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}/diagram",  # 获取流程图
+            "delete_instance": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}",
 
-            "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
-            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
+            # 流程定义管理
+            "process_definitions": f"{self.url_prefix}/repository/process-definitions",  # 查询流程版本定义
+            "process_model": f"{self.url_prefix}/repository/process-definitions/{{process_id}}/model",  # 查询流程详情
+            "process_definition": f"{self.url_prefix}/repository/process-definitions/{{process_definition_id}}",
+
+            # 流程图获取
+            "runtime_diagram": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}/diagram",  # 运行时流程图
+            "historic_diagram": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}/diagram",
+            # 历史流程图
+            "definition_diagram": f"{self.url_prefix}/repository/process-definitions/{{process_definition_id}}/diagram",
+            # 流程定义流程图
+
+            # 任务管理
             "tasks": f"{self.url_prefix}/runtime/tasks",  # 获取任务列表
             "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成任务
-            "action_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领
+            "action_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领/指派/退回任务
+            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
+            "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
         }
 
     def get_groups(self):
@@ -205,18 +217,6 @@ class FlowableHandler:
         response = self.session.get(url, params=params)
         response.raise_for_status()
         return response.json()
-
-    def get_process_diagram(self, process_instance_id):
-        """
-        获取流程图
-        
-        :param self: 说明
-        :param process_instance_id: 说明 流程实例ID
-        """
-        url = self.url_config["diagram"].format(process_instance_id=process_instance_id)
-        response = self.session.get(url)
-        response.raise_for_status()
-        return response.content
 
     def get_tasks(self, process_instance_id=None, assignee=None, candidate_user=None, candidate_group=None):
 
@@ -394,10 +394,43 @@ class FlowableHandler:
         :param process_instance_id:
         :return:
         """
-        url = self.url_config["diagram"].format(process_instance_id=process_instance_id)
-        response = self.session.get(url)
+        # 首先尝试运行时接口（适用于运行中的流程）
+        runtime_url = self.url_config["runtime_diagram"].format(process_instance_id=process_instance_id)
+        response = self.session.get(runtime_url)
+
+        if response.ok:
+            return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
+
+        # 运行时接口失败，说明流程可能已经结束，尝试通过流程定义获取
+        try:
+            # 检查流程是否已经结束并获取流程定义ID
+            historic_url = f"{self.url_config['historic_process_instances']}?processInstanceId={process_instance_id}"
+            historic_response = self.session.get(historic_url)
+
+            if historic_response.ok:
+                historic_data = historic_response.json()
+                if historic_data.get("data"):
+                    # 流程已结束，从历史数据中获取流程定义ID
+                    process_definition_id = historic_data["data"][0]["processDefinitionId"]
+
+                    # 获取流程定义详细信息
+                    process_def_url = self.url_config["process_definition"].format(
+                        process_definition_id=process_definition_id)
+                    process_def_response = self.session.get(process_def_url)
+
+                    if process_def_response.ok:
+                        process_def_info = process_def_response.json()
+                        diagram_resource_url = process_def_info.get("diagramResource")
+
+                        if diagram_resource_url:
+                            # 直接从 diagramResource 地址获取流程图
+                            diagram_response = self.session.get(diagram_resource_url)
+                            if diagram_response.ok:
+                                return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
+        except Exception as e:
+            pass
+        # 所有接口都失败，抛出异常
         response.raise_for_status()
-        return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
 
 
 flowable_handle = FlowableHandler(settings.FLOWABLE_HOST, settings.FLOWABLE_USERNAME, settings.FLOWABLE_PASSWORD)

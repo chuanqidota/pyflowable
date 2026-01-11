@@ -270,8 +270,12 @@ class ActionHandle:
     def get_diagram(instance_id):
         """
             获取流程图
-        :param instance_id: 流程实例ID
+        :param instance_id: 流程实例ID（数据库中的实例ID）
         :return:
         """
-        diagram = flowable_handle.get_diagram(instance_id)
+        instance = Instance.objects.filter(id=instance_id).first()
+        if not instance:
+            raise ValueError(f"没有查询到实例信息: {instance_id}")
+        
+        diagram = flowable_handle.get_diagram(instance.flowable_id)
         return diagram
