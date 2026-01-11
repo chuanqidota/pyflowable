@@ -15,35 +15,30 @@ class FlowableHandler:
         self.session.headers.update({'Content-Type': 'application/json'})
         self.url_prefix = f"{self.endpoint}/flowable-rest/service"
         self.url_config = {
-            # 用户组管理
+            # 组
             "get_groups": f"{self.url_prefix}/identity/groups",  # 查询用户组列表
             "create_group": f"{self.url_prefix}/identity/groups",  # 创建用户组
             "delete_group": f"{self.url_prefix}/identity/groups/{{group_id}}",  # 删除用户组
 
-            # 流程实例管理
+            # 流程
             "start_process": f"{self.url_prefix}/runtime/process-instances",  # 启动流程
-            "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
-            "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
-            "delete_instance": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}",
-
-            # 流程定义管理
             "process_definitions": f"{self.url_prefix}/repository/process-definitions",  # 查询流程版本定义
             "process_model": f"{self.url_prefix}/repository/process-definitions/{{process_id}}/model",  # 查询流程详情
-            "process_definition": f"{self.url_prefix}/repository/process-definitions/{{process_definition_id}}",
 
-            # 流程图获取
+            # 流程实例
+            "process_instance": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}",  # 获取流程实例信息
+            "historic_process_instances": f"{self.url_prefix}/history/historic-process-instances",  # 历史流程实例查询
+            "delete_instance": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}",  # 删除
+
+            # 流程图
             "runtime_diagram": f"{self.url_prefix}/runtime/process-instances/{{process_instance_id}}/diagram",  # 运行时流程图
-            "historic_diagram": f"{self.url_prefix}/history/historic-process-instances/{{process_instance_id}}/diagram",
-            # 历史流程图
-            "definition_diagram": f"{self.url_prefix}/repository/process-definitions/{{process_definition_id}}/diagram",
-            # 流程定义流程图
+            "process_definition": f"{self.url_prefix}/repository/process-definitions/{{process_key}}",  # 流程定义详情
 
-            # 任务管理
-            "tasks": f"{self.url_prefix}/runtime/tasks",  # 获取任务列表
-            "complete_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成任务
-            "action_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 认领/指派/退回任务
-            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
+            # 任务
             "historic_tasks": f"{self.url_prefix}/history/historic-task-instances",  # 历史任务查询
+            "task_identity_links": f"{self.url_prefix}/runtime/tasks/{{task_id}}/identitylinks",  # 任务候选人/组
+            "tasks": f"{self.url_prefix}/runtime/tasks",  # 获取任务列表
+            "action_task": f"{self.url_prefix}/runtime/tasks/{{task_id}}",  # 完成/认领/退回/指派
         }
 
     def get_groups(self):
@@ -291,7 +286,7 @@ class FlowableHandler:
         :param username: 说明 用户英文名
         :param variables: 说明 流程变量
         """
-        url = self.url_config["complete_task"].format(task_id=task_id)
+        url = self.url_config["action_task"].format(task_id=task_id)
         payload = {
             "action": "complete",
         }
@@ -389,48 +384,111 @@ class FlowableHandler:
 
     def get_diagram(self, process_instance_id):
         """
-        获取流程图
+        获取流程图，简化逻辑：
+        1. 首先尝试运行时接口（适用于运行中的流程）
+        2. 运行时接口失败时，获取流程定义并返回流程定义图（适用于已结束的流程）
 
-        :param process_instance_id:
-        :return:
+        :param process_instance_id: 流程实例ID
+        :return: base64编码的图片数据
         """
-        # 首先尝试运行时接口（适用于运行中的流程）
-        runtime_url = self.url_config["runtime_diagram"].format(process_instance_id=process_instance_id)
-        response = self.session.get(runtime_url)
-
-        if response.ok:
-            return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
-
-        # 运行时接口失败，说明流程可能已经结束，尝试通过流程定义获取
+        # 1. 首先尝试运行时接口
         try:
-            # 检查流程是否已经结束并获取流程定义ID
-            historic_url = f"{self.url_config['historic_process_instances']}?processInstanceId={process_instance_id}"
-            historic_response = self.session.get(historic_url)
+            url = self.url_config["runtime_diagram"].format(process_instance_id=process_instance_id)
+            response = self.session.get(url)
+            if response.ok:
+                if response.headers.get('content-type', '').startswith('image/'):
+                    return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
+                try:
+                    diagram_resource = response.json()
+                    if 'contentUrl' in diagram_resource:
+                        content_url = diagram_resource['contentUrl']
+                        if content_url.startswith('http'):
+                            diagram_response = self.session.get(content_url)
+                        else:
+                            if content_url.startswith('/'):
+                                content_url = content_url[1:]
+                            diagram_response = self.session.get(f"{self.endpoint}/{content_url}")
 
-            if historic_response.ok:
-                historic_data = historic_response.json()
-                if historic_data.get("data"):
-                    # 流程已结束，从历史数据中获取流程定义ID
-                    process_definition_id = historic_data["data"][0]["processDefinitionId"]
-
-                    # 获取流程定义详细信息
-                    process_def_url = self.url_config["process_definition"].format(
-                        process_definition_id=process_definition_id)
-                    process_def_response = self.session.get(process_def_url)
-
-                    if process_def_response.ok:
-                        process_def_info = process_def_response.json()
-                        diagram_resource_url = process_def_info.get("diagramResource")
-
-                        if diagram_resource_url:
-                            # 直接从 diagramResource 地址获取流程图
-                            diagram_response = self.session.get(diagram_resource_url)
-                            if diagram_response.ok:
-                                return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
-        except Exception as e:
+                        if diagram_response.ok and diagram_response.headers.get('content-type', '').startswith(
+                                'image/'):
+                            return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
+                except Exception:
+                    pass
+        except Exception:
             pass
-        # 所有接口都失败，抛出异常
-        response.raise_for_status()
+
+        # 2. 尝试获取流程定义图
+        try:
+            # 获取流程实例信息（优先尝试运行时，失败则尝试历史）
+            process_instance = None
+
+            # 尝试运行时接口
+            try:
+                url = self.url_config["process_instance"].format(process_instance_id=process_instance_id)
+                response = self.session.get(url)
+                if response.ok:
+                    process_instance = response.json()
+            except Exception:
+                pass
+
+            # 运行时接口失败，尝试历史接口
+            if not process_instance:
+                try:
+                    url = self.url_config["historic_process_instances"]
+                    params = {"processInstanceId": process_instance_id}
+                    response = self.session.get(url, params=params)
+                    if response.ok:
+                        historic_data = response.json()
+                        if historic_data.get('data'):
+                            process_instance = historic_data['data'][0]
+                except Exception:
+                    pass
+
+            if process_instance and 'processDefinitionId' in process_instance:
+                process_definition_id = process_instance['processDefinitionId']
+
+                # 获取流程定义详细信息
+                process_def_url = self.url_config["process_definition"].format(
+                    process_key=process_definition_id)
+                process_def_response = self.session.get(process_def_url)
+
+                if process_def_response.ok:
+                    process_def_data = process_def_response.json()
+
+                    if 'diagramResource' in process_def_data:
+                        diagram_resource = process_def_data['diagramResource']
+
+                        # 根据diagramResource的类型进行处理
+                        if isinstance(diagram_resource, str):
+                            diagram_response = self.session.get(diagram_resource)
+                        elif isinstance(diagram_resource, dict) and 'contentUrl' in diagram_resource:
+                            diagram_response = self.session.get(diagram_resource['contentUrl'])
+                        else:
+                            pass
+
+                        if diagram_response.ok:
+                            content_type = diagram_response.headers.get('content-type', '')
+
+                            if content_type.startswith('image/') or content_type == 'application/octet-stream':
+                                return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
+                            else:
+                                try:
+                                    diagram_resource_data = diagram_response.json()
+                                    if 'contentUrl' in diagram_resource_data:
+                                        content_response = self.session.get(diagram_resource_data['contentUrl'])
+                                        if content_response.ok:
+                                            content_type = content_response.headers.get('content-type', '')
+                                            if content_type.startswith(
+                                                    'image/') or content_type == 'application/octet-stream':
+                                                return f"data:image/png;base64,{base64.b64encode(content_response.content).decode('ascii')}"
+                                except Exception:
+                                    pass
+
+        except Exception:
+            pass
+
+        # 所有方法都失败
+        raise Exception(f"无法获取流程实例 {process_instance_id} 的流程图")
 
 
 flowable_handle = FlowableHandler(settings.FLOWABLE_HOST, settings.FLOWABLE_USERNAME, settings.FLOWABLE_PASSWORD)
@@ -483,5 +541,5 @@ if __name__ == '__main__':
     # res = handle.get_historic_tasks("4280adfa-dbb8-11f0-8f57-0242ac150003")
     # print(res)
 
-    # res = handle.get_diagram("b43d214f-e9db-11f0-a8fb-0242ac140002")
-    # print(res)
+    res = handle.get_diagram("7a315ee4-eec1-11f0-bb04-e2f5292ccdf0", "AppApplyProcess")
+    print(res)
