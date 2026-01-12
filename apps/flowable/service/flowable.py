@@ -243,8 +243,9 @@ class ActionHandle:
 
         task_key = tasks[0].get("taskDefinitionKey")
         task_id = tasks[0].get("id")
-        if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
-            raise ValueError("人员不在审批节点")
+        if not User.objects.filter(username=username, is_admin=True).exists():
+            if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
+                raise ValueError("人员不在审批节点")
 
         record = instance.record
         record.append(self.__action(allow).get("handle"))
@@ -276,6 +277,5 @@ class ActionHandle:
         instance = Instance.objects.filter(id=instance_id).first()
         if not instance:
             raise ValueError(f"没有查询到实例信息: {instance_id}")
-        
         diagram = flowable_handle.get_diagram(instance.flowable_id)
         return diagram

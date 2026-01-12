@@ -39,6 +39,8 @@ class InstanceViewSet(LoginRequiredMixin, ModelViewSet):
             return super().get_serializer_class()
 
     def get_queryset(self):
+        if self.request.user.is_admin:
+            return super().get_queryset()
         status = self.request.query_params.get("status")
         # 全部流程
         if status == "all":

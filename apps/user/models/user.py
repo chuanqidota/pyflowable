@@ -14,6 +14,7 @@ class User(BaseModel):
     group = models.ManyToManyField(Group, related_name="group_user", db_constraint=False, help_text='所属组')
     username = models.CharField(max_length=150, unique=True, help_text='用户名', db_comment=_('用户名'))
     name = models.CharField(max_length=150, help_text='姓名', db_comment=_('姓名'))
+    id_admin = models.BooleanField(default=False, help_text='是否是管理员', db_comment=_('是否是管理员'))
     _password = models.CharField(max_length=100, null=True, blank=True, db_comment=_('密码'))
     email = models.EmailField(unique=True, help_text='电子邮件', db_comment=_('电子邮件'))
     is_active = models.BooleanField(default=True, help_text='是否激活', db_comment=_('是否激活'))

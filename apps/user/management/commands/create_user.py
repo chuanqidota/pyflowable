@@ -8,8 +8,9 @@ from user.models import User
 class Command(BaseCommand):
     help = '创建新用户'
     """
-        python manage.py create_user '{"username":"admin","name":"admin","password":"admin"}'
+        python manage.py create_user '{"username":"admin","name":"admin","password":"admin","is_admin":True}'
     """
+
     def add_arguments(self, parser):
         parser.add_argument("user_data", help="用户数据字典")
 
