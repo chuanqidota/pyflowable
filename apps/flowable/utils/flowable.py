@@ -277,21 +277,21 @@ class FlowableHandler:
             return False, response.text
         return response.json().get("data")
 
-    def complete_task(self, task_id, username=None, variables=None):
+    def complete_task(self, task_id, assignee=None, variables=None):
         """
         完成任务
         
         :param self: 说明
         :param task_id: 说明 任务ID
-        :param username: 说明 用户英文名
+        :param assignee: 说明 用户英文名
         :param variables: 说明 流程变量
         """
         url = self.url_config["action_task"].format(task_id=task_id)
         payload = {
             "action": "complete",
         }
-        if username:
-            payload["assignee"] = username
+        if assignee:
+            payload["assignee"] = assignee
         if variables:
             payload["variables"] = [{"name": k, "value": v} for k, v in variables.items()]
         response = self.session.post(url, json=payload)
@@ -383,112 +383,34 @@ class FlowableHandler:
         return response.json()
 
     def get_diagram(self, process_instance_id):
-        """
-        获取流程图，简化逻辑：
-        1. 首先尝试运行时接口（适用于运行中的流程）
-        2. 运行时接口失败时，获取流程定义并返回流程定义图（适用于已结束的流程）
+        """获取流程图 - 极简版本（假设API调用总是成功）"""
 
-        :param process_instance_id: 流程实例ID
-        :return: base64编码的图片数据
-        """
-        # 1. 首先尝试运行时接口
-        try:
-            url = self.url_config["runtime_diagram"].format(process_instance_id=process_instance_id)
-            response = self.session.get(url)
-            if response.ok:
-                if response.headers.get('content-type', '').startswith('image/'):
-                    return f"data:image/png;base64,{base64.b64encode(response.content).decode('ascii')}"
-                try:
-                    diagram_resource = response.json()
-                    if 'contentUrl' in diagram_resource:
-                        content_url = diagram_resource['contentUrl']
-                        if content_url.startswith('http'):
-                            diagram_response = self.session.get(content_url)
-                        else:
-                            if content_url.startswith('/'):
-                                content_url = content_url[1:]
-                            diagram_response = self.session.get(f"{self.endpoint}/{content_url}")
+        # 1. 尝试运行时流程图
+        resp = self.session.get(self.url_config["runtime_diagram"].format(process_instance_id=process_instance_id))
+        if resp.ok and resp.headers.get('content-type', '').startswith('image/'):
+            return self._img_to_base64(resp.content)
 
-                        if diagram_response.ok and diagram_response.headers.get('content-type', '').startswith(
-                                'image/'):
-                            return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
-                except Exception:
-                    pass
-        except Exception:
-            pass
+        # 2. 通过流程定义获取静态图
+        # 获取流程定义ID
+        instance = self.session.get(
+            self.url_config["process_instance"].format(process_instance_id=process_instance_id)
+        ).json()
 
-        # 2. 尝试获取流程定义图
-        try:
-            # 获取流程实例信息（优先尝试运行时，失败则尝试历史）
-            process_instance = None
+        # 获取流程定义
+        definition = self.session.get(
+            self.url_config["process_definition"].format(process_key=instance['processDefinitionId'])
+        ).json()
 
-            # 尝试运行时接口
-            try:
-                url = self.url_config["process_instance"].format(process_instance_id=process_instance_id)
-                response = self.session.get(url)
-                if response.ok:
-                    process_instance = response.json()
-            except Exception:
-                pass
+        # 获取图片
+        diagram = definition['diagramResource']
+        img_url = diagram.get('contentUrl') if isinstance(diagram, dict) else diagram
 
-            # 运行时接口失败，尝试历史接口
-            if not process_instance:
-                try:
-                    url = self.url_config["historic_process_instances"]
-                    params = {"processInstanceId": process_instance_id}
-                    response = self.session.get(url, params=params)
-                    if response.ok:
-                        historic_data = response.json()
-                        if historic_data.get('data'):
-                            process_instance = historic_data['data'][0]
-                except Exception:
-                    pass
+        img_resp = self.session.get(img_url)
+        return self._img_to_base64(img_resp.content)
 
-            if process_instance and 'processDefinitionId' in process_instance:
-                process_definition_id = process_instance['processDefinitionId']
-
-                # 获取流程定义详细信息
-                process_def_url = self.url_config["process_definition"].format(
-                    process_key=process_definition_id)
-                process_def_response = self.session.get(process_def_url)
-
-                if process_def_response.ok:
-                    process_def_data = process_def_response.json()
-
-                    if 'diagramResource' in process_def_data:
-                        diagram_resource = process_def_data['diagramResource']
-
-                        # 根据diagramResource的类型进行处理
-                        if isinstance(diagram_resource, str):
-                            diagram_response = self.session.get(diagram_resource)
-                        elif isinstance(diagram_resource, dict) and 'contentUrl' in diagram_resource:
-                            diagram_response = self.session.get(diagram_resource['contentUrl'])
-                        else:
-                            pass
-
-                        if diagram_response.ok:
-                            content_type = diagram_response.headers.get('content-type', '')
-
-                            if content_type.startswith('image/') or content_type == 'application/octet-stream':
-                                return f"data:image/png;base64,{base64.b64encode(diagram_response.content).decode('ascii')}"
-                            else:
-                                try:
-                                    diagram_resource_data = diagram_response.json()
-                                    if 'contentUrl' in diagram_resource_data:
-                                        content_response = self.session.get(diagram_resource_data['contentUrl'])
-                                        if content_response.ok:
-                                            content_type = content_response.headers.get('content-type', '')
-                                            if content_type.startswith(
-                                                    'image/') or content_type == 'application/octet-stream':
-                                                return f"data:image/png;base64,{base64.b64encode(content_response.content).decode('ascii')}"
-                                except Exception:
-                                    pass
-
-        except Exception:
-            pass
-
-        # 所有方法都失败
-        raise Exception(f"无法获取流程实例 {process_instance_id} 的流程图")
+    def _img_to_base64(self, content):
+        """图片转base64"""
+        return f"data:image/png;base64,{base64.b64encode(content).decode('ascii')}"
 
 
 flowable_handle = FlowableHandler(settings.FLOWABLE_HOST, settings.FLOWABLE_USERNAME, settings.FLOWABLE_PASSWORD)

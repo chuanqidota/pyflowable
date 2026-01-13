@@ -43,9 +43,10 @@ class SubmitView(LoginRequiredMixin, APIView):
         name = data.get("name")
         number = data.get("number")
         extra_attrs = data.get("extra_attrs")
-        username = request.user.username
+        user = request.user
+        username = user.username
         try:
-            submit_state, submit_msg = ActionHandle().submit(process_key, username, name, number, extra_attrs)
+            submit_state, submit_msg = ActionHandle(user).submit(process_key, name, number, extra_attrs)
             return SuccessResp(submit_msg) if submit_state else FailResp(submit_msg)
         except Exception as e:
             return FailResp(repr(e))
@@ -79,7 +80,7 @@ class RepealView(LoginRequiredMixin, APIView):
         data = request.data
         instance_id = data.get("instance_id")
         try:
-            repeal_state, repeal_msg = ActionHandle().repeal(instance_id)
+            repeal_state, repeal_msg = ActionHandle(request.user).repeal(instance_id)
             return SuccessResp(repeal_msg) if repeal_state else FailResp(repeal_msg)
         except Exception as e:
             return FailResp(repr(e))
@@ -112,9 +113,8 @@ class ClaimView(LoginRequiredMixin, APIView):
     def post(self, request):
         data = request.data
         instance_id = data.get("instance_id")
-        username = request.user.username
         try:
-            claim_state, claim_msg = ActionHandle().claim(instance_id, username)
+            claim_state, claim_msg = ActionHandle(request.user).claim(instance_id)
             return SuccessResp(claim_msg) if claim_state else FailResp(claim_msg)
         except Exception as e:
             return FailResp(repr(e))
@@ -150,7 +150,7 @@ class DelegateView(LoginRequiredMixin, APIView):
         instance_id = data.get("instance_id")
         username = data.get("username")
         try:
-            delegate_state, delegate_msg = ActionHandle().delegate(instance_id, username)
+            delegate_state, delegate_msg = ActionHandle(request.user).delegate(instance_id, username)
             return SuccessResp(delegate_msg) if delegate_state else FailResp(delegate_msg)
         except Exception as e:
             return FailResp(repr(e))
@@ -184,7 +184,7 @@ class ResolveView(LoginRequiredMixin, APIView):
         data = request.data
         instance_id = data.get("instance_id")
         try:
-            resolve_state, resolve_msg = ActionHandle().resolve(instance_id)
+            resolve_state, resolve_msg = ActionHandle(request.user).resolve(instance_id)
             return SuccessResp(resolve_msg) if resolve_state else FailResp(resolve_msg)
         except Exception as e:
             return FailResp(repr(e))
@@ -221,9 +221,8 @@ class HandleView(LoginRequiredMixin, APIView):
         data = request.data
         instance_id = data.get("instance_id")
         allow = data.get("allow")
-        username = request.user.username
         try:
-            ActionHandle().handle(instance_id, allow, username)
+            ActionHandle(request.user).handle(instance_id, allow)
             return SuccessResp(msg="后台执行中")
         except Exception as e:
             return FailResp(repr(e))

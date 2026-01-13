@@ -36,11 +36,10 @@ class ActionHandle:
         }
         return record
 
-    def submit(self, process_key, username, name, number=None, extra_attrs=None):
+    def submit(self, process_key, name, number=None, extra_attrs=None):
         """
             提交工单
         :param process_key: 流程定义的key
-        :param username: 申请人英文名
         :param name: 工单名称
         :param number: 工单编号
         :param extra_attrs: dict 表单参数
@@ -54,9 +53,9 @@ class ActionHandle:
             return False, f"没有流程定义: {process_key}"
 
         # 申请人
-        applicant = User.objects.filter(username=username).first()
+        applicant = User.objects.filter(username=self.user.username).first()
         if not applicant:
-            return False, f"没有申请人: {username}"
+            return False, f"没有申请人: {self.user.username}"
 
         # 启动流程
         start_state, flowable_id = flowable_handle.start_process(process_key, self.business_key)
@@ -136,11 +135,10 @@ class ActionHandle:
         instance.save()
         return True, "执行成功"
 
-    def claim(self, instance_id, username):
+    def claim(self, instance_id):
         """
             认领任务
         :param instance_id: 流程实例ID
-        :param username: 用户英文名
         :return:
         """
         instance = Instance.objects.filter(id=instance_id).first()
@@ -153,6 +151,7 @@ class ActionHandle:
 
         task_id = tasks[0].get("id")
         task_key = tasks[0].get("taskDefinitionKey")
+        username = self.user.username
 
         claim_state, claim_msg = flowable_handle.claim_task(task_id, username)
         if not claim_state:
@@ -224,12 +223,11 @@ class ActionHandle:
 
         return True, "执行成功"
 
-    def handle(self, instance_id, allow, username):
+    def handle(self, instance_id, allow):
         """
             审批处理工单
         :param instance_id: 流程实例ID
         :param allow: allow是flowable网关上的变量
-        :param username: 用户英文名
         :return:
         """
         instance = Instance.objects.filter(id=instance_id).first()
@@ -238,12 +236,14 @@ class ActionHandle:
         process_key = instance.process.key
         flowable_id = instance.flowable_id
         tasks = flowable_handle.get_tasks(flowable_id)
+        print("tasks ", [task.get("taskDefinitionKey") for task in tasks])
         if not tasks:
             raise ValueError("flowable没有找到任务")
 
         task_key = tasks[0].get("taskDefinitionKey")
         task_id = tasks[0].get("id")
-        if not User.objects.filter(username=username, is_admin=True).exists():
+        username = self.user.username
+        if not User.objects.filter(username=username, id_admin=True).exists():
             if not InstanceTask.objects.filter(instance=instance, key=task_key, assignee__contains=[username]).exists():
                 raise ValueError("人员不在审批节点")
 
@@ -262,6 +262,7 @@ class ActionHandle:
             "allow": allow
         })
         # 反射对应函数
+        print("handle kwargs:", kwargs)
         caller = methodcaller(task_key, **kwargs)
         module = importlib.import_module("apps.flowable.process")
         model = getattr(module, process_key)
