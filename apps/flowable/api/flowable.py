@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.views import APIView
 
 from flowable.service.flowable import ActionHandle
+from flowable.tasks import handle_task
 from flowable.utils.decorator import kwargs_required
 from utils.response import SuccessResp, FailResp
 from user.mixins.login import LoginRequiredMixin
@@ -44,7 +45,6 @@ class SubmitView(LoginRequiredMixin, APIView):
         number = data.get("number")
         extra_attrs = data.get("extra_attrs")
         user = request.user
-        username = user.username
         try:
             submit_state, submit_msg = ActionHandle(user).submit(process_key, name, number, extra_attrs)
             return SuccessResp(submit_msg) if submit_state else FailResp(submit_msg)
@@ -222,7 +222,8 @@ class HandleView(LoginRequiredMixin, APIView):
         instance_id = data.get("instance_id")
         allow = data.get("allow")
         try:
-            ActionHandle(request.user).handle(instance_id, allow)
+            handle_task.delay(request.user.id, instance_id, allow)
+            # ActionHandle(request.user).handle(instance_id, allow)
             return SuccessResp(msg="后台执行中")
         except Exception as e:
             return FailResp(repr(e))
