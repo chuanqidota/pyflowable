@@ -313,18 +313,19 @@ FLOWABLE_USERNAME = config["flowable"]["username"]
 FLOWABLE_PASSWORD = config["flowable"]["password"]
 FLOWABLE_BUSINESS_KEY = config["flowable"]["business_key"]
 
-# redis配置
+# celery基础配置
+CELERY_ACCEPT_CONTENT = ["json", "pickle"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Asia/Shanghai"
+
+# 单机redis配置
 REDIS_HOST = config["redis"]["host"]
 REDIS_DB = config["redis"]["db"]
 REDIS_PASSWORD = config["redis"]["password"] if config["redis"]["password"] else ""
-
-# 日期
-CELERY_TIMEZONE = TIME_ZONE
 CELERY_BROKER_URL = f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}/{REDIS_DB}'
-CELERY_RESULT_SERIALIZER = 'pickle'
-CELERY_ACCEPT_CONTENT = ['json', 'pickle']
 
-# 缓存
+# 单机redis缓存
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -335,6 +336,52 @@ CACHES = {
         }
     }
 }
+
+
+# Redis哨兵
+# REDIS_SENTINELS = [
+#     ("{ip}", "{port这里是数字}"),
+#     ("{ip}", "{port这里是数字}"),
+#     ("{ip}", "{port这里是数字}"),
+# ]
+# REDIS_MASTER_NAME = "{myster_name}"
+# REDIS_PASSWORD = "{password}"
+# REDIS_DB = 1
+# KEY_PREFIX = "pyflowable"
+# CELERY_BROKER_URL = ";".join([f"sentinel://:{REDIS_PASSWORD}@{i[0]}:{i[1]}/{REDIS_DB}" for i in REDIS_SENTINELS])
+# CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+#
+# CELERY_BROKER_TRANSPORT_OPTIONS = {
+#     "sentinels": REDIS_SENTINELS,
+#     "master_name": REDIS_MASTER_NAME,
+#     "password": REDIS_PASSWORD,
+#     "db": REDIS_DB,
+# }
+#
+# CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
+#     "sentinels": REDIS_SENTINELS,
+#     "master_name": REDIS_MASTER_NAME,
+#     "password": REDIS_PASSWORD,
+#     "db": REDIS_DB,
+# }
+
+
+# 哨兵模式的缓存
+# CACHES = {
+#     "default": {
+#         "BACKEND": "django_redis.cache.RedisCache",
+#         "LOCATION": f"redis://{REDIS_MASTER_NAME}/{REDIS_DB}",
+#         "OPTIONS": {
+#             "CLIENT_CLASS": "django_redis.client.SentinelClient",
+#             "CONNECTION_FACTORY": "django_redis.pool.SentinelConnectionFactory",
+#             "SENTINELS": REDIS_SENTINELS,
+#             "MASTER_NAME": REDIS_MASTER_NAME,
+#             "PASSWORD":REDIS_PASSWORD,
+#         },
+#         "KEY_PREFIX": "{前缀}",
+#         "TIMEOUT": 3000,
+#     }
+# }
 
 # Spectacular 相关配置
 SPECTACULAR_SETTINGS = {
